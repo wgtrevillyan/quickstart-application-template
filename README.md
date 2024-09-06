@@ -1,3 +1,12 @@
+## Application Techstack
+1. Supabase
+2. Vercel Deployment
+3. Vercel Serverless Functions Next.JS
+4. FlutterFlow Front End
+
+
+-----------------------------------------------
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
