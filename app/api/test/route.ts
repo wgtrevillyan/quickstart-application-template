@@ -2,6 +2,6 @@ export const dynamic = 'force-dynamic'; // static by default, unless reading the
 export const runtime = 'nodejs'; // nodejs or deno
  
 export function GET(request: Request) {
-  console.log('GET', request.url);
+  console.log('Time:', new Date().toISOString());
   return new Response(`Hello from ${process.env.VERCEL_REGION}`);
 }
