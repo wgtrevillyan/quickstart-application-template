@@ -35,5 +35,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# development scripts for quick actions
-/development
+# local development scripts
+/local_dev
