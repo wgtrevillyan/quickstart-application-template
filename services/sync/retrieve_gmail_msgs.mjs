@@ -127,8 +127,8 @@ export default {
 
       // Establish Supabase connection
       const supabaseClient = await establishSupabaseClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY
+        process.env.SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_KEY
       );
 
       // Retrieve Gmail secrets
@@ -201,8 +201,8 @@ export default {
 
         // Establish Supabase connection
         const supabaseClient = await establishSupabaseClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_SERVICE_KEY
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_KEY
         );
 
         // Retrieve the last stored message ID
