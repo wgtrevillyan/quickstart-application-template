@@ -74,7 +74,9 @@ export default {
 
         // Refresh the access token
         try {
+          console.log("Refreshing access token...");
           const { credentials } = await oauth2Client.refreshAccessToken();
+
           const newAccessToken = credentials.access_token;
           console.log("New access token obtained:", newAccessToken);
           const expiresIn = credentials.expiry_date
