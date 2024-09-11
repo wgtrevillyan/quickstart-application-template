@@ -125,6 +125,7 @@ export default {
           }
         }
   
+        /*
         // Establish Supabase connection
         const supabaseClient = await establishSupabaseClient(
             process.env.SUPABASE_URL,
@@ -144,18 +145,29 @@ export default {
           supabaseClient,
           gmailRefreshSecretId
         );
-  
+        */
+
+        // Retrieve Gmail secrets
+        const gmail_client_id = process.env.gmail_client_id;
+        const gmail_client_secret = process.env.gmail_client_secret;
+        const modifiedUserId = userId.replace(/-/g, "_");
+        const gmail_refresh_token = process.env[`gmail_refresh_token_user_${modifiedUserId}`];
+        // console.log("gmail_client_id: ", gmail_client_id);
+        // console.log("gmail_client_secret: ", gmail_client_secret);
+        // console.log(`gmail_refresh_token_user_${modifiedUserId}: `, gmail_refresh_token);
+
         // Retrieve Gmail access token
         const gmailAccessToken = await retrieveGmailAccessToken(
-          commonGmailSecrets.gmail_client_id,
-          commonGmailSecrets.gmail_client_secret,
-          userGmailSecrets[gmailRefreshSecretId]
+          gmail_client_id,
+          gmail_client_secret,
+          gmail_refresh_token
         );
-  
+
         // Combine all secrets
         const secrets = {
-          ...commonGmailSecrets,
-          ...userGmailSecrets,
+          gmail_client_id,
+          gmail_client_secret,
+          gmail_refresh_token,
           gmail_access_token: gmailAccessToken.access_token,
         };
   

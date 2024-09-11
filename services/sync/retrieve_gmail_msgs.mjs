@@ -39,7 +39,7 @@ export default {
             });
             if (error) throw error;
             secrets[secretName] = data;
-            console.log(`Secret retrieved.`);
+            console.log(`Secret retrieved for ${secretName}: ${data}`);
           } catch (error) {
             console.error(
               `Error retrieving secret '${secretName}':`,
@@ -58,11 +58,15 @@ export default {
         refreshToken
       ) {
         // Create OAuth2 client which will be used to refresh the access token
+        console.log("clientId: ", clientId);
+        console.log("clientSecret: ", clientSecret);
+        console.log("refreshToken: ", refreshToken);
         try {
           var oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
           oauth2Client.setCredentials({
             refresh_token: refreshToken,
           });
+          console.log("OAuth2 client created:", oauth2Client);
         } catch (error) {
           console.error("Error creating OAuth2 client:", error.message);
           throw error;
@@ -70,8 +74,11 @@ export default {
 
         // Refresh the access token
         try {
+          console.log("Refreshing access token...");
           const { credentials } = await oauth2Client.refreshAccessToken();
+
           const newAccessToken = credentials.access_token;
+          console.log("New access token obtained:", newAccessToken);
           const expiresIn = credentials.expiry_date
             ? Math.floor((credentials.expiry_date - Date.now()) / 1000)
             : credentials.expires_in;
@@ -125,6 +132,7 @@ export default {
         }
       }
 
+      /*
       // Establish Supabase connection
       const supabaseClient = await establishSupabaseClient(
         process.env.SUPABASE_URL,
@@ -139,7 +147,9 @@ export default {
       );
 
       // Retrieve Gmail refresh token
-      const gmailRefreshSecretId = [`gmail_refresh_token_user_${userId}`];
+      const modifiedUserId = userId.replace(/-/g, "_");
+      console.log("modifiedUserId: ", modifiedUserId);
+      const gmailRefreshSecretId = [`gmail_refresh_token_user_${modifiedUserId}`];
       const userGmailSecrets = await retrieveSecret(
         supabaseClient,
         gmailRefreshSecretId
@@ -150,12 +160,30 @@ export default {
         commonGmailSecrets.gmail_client_id,
         commonGmailSecrets.gmail_client_secret,
         userGmailSecrets[gmailRefreshSecretId]
+      );    
+      */
+
+      // Retrieve Gmail secrets
+      const gmail_client_id = process.env.gmail_client_id;
+      const gmail_client_secret = process.env.gmail_client_secret;
+      const modifiedUserId = userId.replace(/-/g, "_");
+      const gmail_refresh_token = process.env[`gmail_refresh_token_user_${modifiedUserId}`];
+      // console.log("gmail_client_id: ", gmail_client_id);
+      // console.log("gmail_client_secret: ", gmail_client_secret);
+      // console.log(`gmail_refresh_token_user_${modifiedUserId}: `, gmail_refresh_token);
+
+      // Retrieve Gmail access token
+      const gmailAccessToken = await retrieveGmailAccessToken(
+        gmail_client_id,
+        gmail_client_secret,
+        gmail_refresh_token
       );
 
       // Combine all secrets
       const secrets = {
-        ...commonGmailSecrets,
-        ...userGmailSecrets,
+        gmail_client_id,
+        gmail_client_secret,
+        gmail_refresh_token,
         gmail_access_token: gmailAccessToken.access_token,
       };
 
