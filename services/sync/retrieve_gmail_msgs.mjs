@@ -76,6 +76,7 @@ export default {
         try {
           const { credentials } = await oauth2Client.refreshAccessToken();
           const newAccessToken = credentials.access_token;
+          console.log("New access token obtained:", newAccessToken);
           const expiresIn = credentials.expiry_date
             ? Math.floor((credentials.expiry_date - Date.now()) / 1000)
             : credentials.expires_in;
