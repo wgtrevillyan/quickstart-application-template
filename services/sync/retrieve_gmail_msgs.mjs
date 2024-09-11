@@ -66,6 +66,7 @@ export default {
           oauth2Client.setCredentials({
             refresh_token: refreshToken,
           });
+          console.log("OAuth2 client created:", oauth2Client);
         } catch (error) {
           console.error("Error creating OAuth2 client:", error.message);
           throw error;
