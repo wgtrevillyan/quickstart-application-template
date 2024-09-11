@@ -62,7 +62,10 @@ export default {
         console.log("clientSecret: ", clientSecret);
         console.log("refreshToken: ", refreshToken);
         try {
-          var oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+          var oauth2Client = new google.auth.OAuth2({
+            clientId: clientId,
+            clientSecret: clientSecret
+          });
           oauth2Client.setCredentials({
             refresh_token: refreshToken,
           });
