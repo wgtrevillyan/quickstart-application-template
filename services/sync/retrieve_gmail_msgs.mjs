@@ -76,7 +76,7 @@ export default {
         try {
           console.log("Refreshing access token...");
           const { credentials } = await oauth2Client.refreshAccessToken();
-
+          console.log("Access token refreshed:", credentials);
           const newAccessToken = credentials.access_token;
           console.log("New access token obtained:", newAccessToken);
           const expiresIn = credentials.expiry_date
@@ -89,6 +89,7 @@ export default {
 
           return credentials;
         } catch (error) {
+          console.log("Error refreshing access token:", error.message);
           console.error("Error refreshing access token:", error.message);
           throw error;
         }
