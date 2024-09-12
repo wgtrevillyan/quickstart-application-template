@@ -62,7 +62,10 @@ export default {
         console.log("clientSecret: ", clientSecret);
         console.log("refreshToken: ", refreshToken);
         try {
-          var oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
+          var oauth2Client = new google.auth.OAuth2({
+            clientId: clientId,
+            clientSecret: clientSecret
+          });
           oauth2Client.setCredentials({
             refresh_token: refreshToken,
           });
@@ -75,8 +78,9 @@ export default {
         // Refresh the access token
         try {
           console.log("Refreshing access token...");
+          console.log("Credentials: ", await oauth2Client.refreshAccessToken());
           const { credentials } = await oauth2Client.refreshAccessToken();
-
+          console.log("Access token refreshed:", credentials);
           const newAccessToken = credentials.access_token;
           console.log("New access token obtained:", newAccessToken);
           const expiresIn = credentials.expiry_date
@@ -89,6 +93,7 @@ export default {
 
           return credentials;
         } catch (error) {
+          console.log("Error refreshing access token:", error.message);
           console.error("Error refreshing access token:", error.message);
           throw error;
         }
