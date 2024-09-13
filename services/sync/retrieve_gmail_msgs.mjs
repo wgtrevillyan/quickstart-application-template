@@ -3,6 +3,10 @@
 import { createClient } from "@supabase/supabase-js";
 import { google } from "googleapis";
 
+// Import necessary modules
+import fetch from 'node-fetch';
+import querystring from 'querystring';
+
 import dotenv from "dotenv";
 
 // Load environment variables
@@ -75,10 +79,60 @@ export default {
           throw error;
         }
 
+        /*
+        // Function to refresh access token without using Google APIs library
+        async function refreshAccessTokenWithoutLibrary(clientId, clientSecret, refreshToken) {
+          const tokenEndpoint = 'https://oauth2.googleapis.com/token';
+          const requestBody = querystring.stringify({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token',
+          });
+
+          console.log("Request Body:", requestBody);
+          try {
+            console.log("Beginning fetch...");
+            const response = await fetch(tokenEndpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: requestBody,
+            });
+            console.log("Fetch completed.");
+            console.log("Response:", response);
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Access Token:', data.access_token);
+            return data.access_token;
+          } catch (error) {
+            console.error('Error refreshing access token:', error);
+          }
+        }
+
         // Refresh the access token
         try {
-          console.log("Refreshing access token...");
-          console.log("Credentials: ", await oauth2Client.refreshAccessToken());
+          console.log("Refreshing access token....");
+          const newAccessToken = await refreshAccessTokenWithoutLibrary(clientId, clientSecret, refreshToken);
+          console.log("New access token obtained:", newAccessToken);
+          return newAccessToken;
+        } catch (error) { 
+          console.error("Error refreshing access token:", error.message);
+          throw error;
+        }
+        */
+
+        
+        // Refresh the access token
+        try {
+          console.log("Refreshing access token....");
+          //
+          //console.log("Credentials: ", await oauth2Client.refreshAccessToken());
           const { credentials } = await oauth2Client.refreshAccessToken();
           console.log("Access token refreshed:", credentials);
           const newAccessToken = credentials.access_token;
@@ -97,6 +151,7 @@ export default {
           console.error("Error refreshing access token:", error.message);
           throw error;
         }
+        
       }
 
       // FUNCTION: Establish Gmail API connection
@@ -189,6 +244,7 @@ export default {
         gmail_client_id,
         gmail_client_secret,
         gmail_refresh_token,
+        //gmail_access_token: gmailAccessToken,
         gmail_access_token: gmailAccessToken.access_token,
       };
 
