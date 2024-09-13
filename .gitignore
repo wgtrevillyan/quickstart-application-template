@@ -37,3 +37,5 @@ next-env.d.ts
 
 # local development scripts
 /local_dev
+
+.trigger
