@@ -89,7 +89,9 @@ export default {
             grant_type: 'refresh_token',
           });
 
+          console.log("Request Body:", requestBody);
           try {
+            console.log("Beginning fetch...");
             const response = await fetch(tokenEndpoint, {
               method: 'POST',
               headers: {
@@ -97,6 +99,7 @@ export default {
               },
               body: requestBody,
             });
+            console.log("Fetch completed.");
 
             if (!response.ok) {
               throw new Error(`HTTP error! Status: ${response.status}`);
@@ -112,6 +115,7 @@ export default {
 
         // Refresh the access token
         try {
+          console.log("Refreshing access token....");
           const newAccessToken = await refreshAccessTokenWithoutLibrary(clientId, clientSecret, refreshToken);
           console.log("New access token obtained:", newAccessToken);
           return newAccessToken;
