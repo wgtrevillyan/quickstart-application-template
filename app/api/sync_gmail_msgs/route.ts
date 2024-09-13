@@ -6,7 +6,7 @@ import syncGmailMsgs from '../../../services/sync/sync_gmail_msgs.mjs';
 // Exporting the dynamic and runtime variables
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
 export const runtime = "nodejs"; // nodejs or deno
-export const maxDuration = 60; // This function can run for a maximum of 60 seconds (1 minutes)
+export const maxDuration = 300; // This function can run for a maximum of 60 seconds (1 minutes)
 
 export function GET(request: Request) {
   console.log("\n"); // Log a new line
