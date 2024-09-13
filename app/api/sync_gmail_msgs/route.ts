@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"; // static by default, unless reading the
 export const runtime = "nodejs"; // nodejs or deno
 export const maxDuration = 300; // This function can run for a maximum of 60 seconds (1 minutes)
 
-export function GET(request: Request) {
+export async function GET(request: Request) {
   console.log("\n"); // Log a new line
   console.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
 
@@ -16,7 +16,9 @@ export function GET(request: Request) {
     console.log("Starting sync service..."); // Log the message
 
     // Run the sync_gmail_msgs function
-    syncGmailMsgs.run();
+    await syncGmailMsgs.run();
+
+    console.log("Sync service completed."); // Log the message
 
     return new Response("Sync service triggered."); // Return a response
   } catch (error) {
