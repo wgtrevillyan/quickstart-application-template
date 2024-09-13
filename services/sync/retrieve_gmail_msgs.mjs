@@ -100,6 +100,7 @@ export default {
               body: requestBody,
             });
             console.log("Fetch completed.");
+            console.log("Response:", response);
 
             if (!response.ok) {
               throw new Error(`HTTP error! Status: ${response.status}`);
