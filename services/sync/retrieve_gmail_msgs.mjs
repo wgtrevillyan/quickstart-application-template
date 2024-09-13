@@ -79,6 +79,7 @@ export default {
           throw error;
         }
 
+        /*
         // Function to refresh access token without using Google APIs library
         async function refreshAccessTokenWithoutLibrary(clientId, clientSecret, refreshToken) {
           const tokenEndpoint = 'https://oauth2.googleapis.com/token';
@@ -124,8 +125,9 @@ export default {
           console.error("Error refreshing access token:", error.message);
           throw error;
         }
+        */
 
-        /*
+        
         // Refresh the access token
         try {
           console.log("Refreshing access token....");
@@ -149,7 +151,7 @@ export default {
           console.error("Error refreshing access token:", error.message);
           throw error;
         }
-        */
+        
       }
 
       // FUNCTION: Establish Gmail API connection
@@ -242,8 +244,8 @@ export default {
         gmail_client_id,
         gmail_client_secret,
         gmail_refresh_token,
-        gmail_access_token: gmailAccessToken,
-        //gmail_access_token: gmailAccessToken.access_token,
+        //gmail_access_token: gmailAccessToken,
+        gmail_access_token: gmailAccessToken.access_token,
       };
 
       // Establish Gmail connection
