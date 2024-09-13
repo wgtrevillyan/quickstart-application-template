@@ -307,55 +307,8 @@ export default {
         return dtObject.toISOString().replace("T", " ").slice(0, 19);
       }
 
-      // FUNCTION: Get last stored Gmail message ID from Supabase gMailMessages table
-      async function getLastStoredGMsgId(gUserId) {
-        // FUNCTION: Establish Supabase connection
-        async function establishSupabaseClient(url, key) {
-        console.log(`Connecting to Supabase at ${url}...`);
-        try {
-            const supabase = await createClient(url, key);
-            console.log("Supabase connection established.");
-            return supabase;
-        } catch (error) {
-            console.error(
-            "Error establishing Supabase connection:",
-            error.message
-            );
-            throw error;
-        }
-        }
+      //////////////////////////////
 
-        // Establish Supabase connection
-        const supabaseClient = await establishSupabaseClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
-        );
-
-        // Retrieve the last stored message ID
-        try {
-          console.log(`Retrieving last stored message from Supabase...`);
-          var { data, error } = await supabaseClient
-            .from("gmailMessages")
-            .select("gMsgId")
-            .eq("gMsgUserId", gUserId)
-            .order("receivedAt", { ascending: false })
-            .limit(1);
-        } catch (error) {
-          console.error("Error retrieving last stored message ID:", error.message);
-          throw error;
-        }
-
-        if (data.length === 0) {
-          return null;
-        }
-
-        return data[0].gMsgId;
-      }
-
-      /////////////////////////////////////////////////
-
-      // Retrieve the last stored message ID
-      const lastStoredGMsgId = await getLastStoredGMsgId(gUserId);
       const msgs_lst = [];
 
       // Process each message
@@ -381,11 +334,13 @@ export default {
           continue;
         } 
 
+        /*
         // Check if the last stored message has been reached
         if (lastStoredGMsgId && message.id === lastStoredGMsgId) { 
             console.log(`Last stored message reached: ${lastStoredGMsgId}. Exiting loop...`);
             break;
         }
+        */
 
         const msg_id = message.id;
         var error_msgs = [];
@@ -461,6 +416,63 @@ export default {
       return msgs_lst;
     }
 
+    // FUNCTION: Get last stored Gmail message ID from Supabase gMailMessages table
+    async function getLastStoredGMsgId(gUserId) {
+      // FUNCTION: Establish Supabase connection
+      async function establishSupabaseClient(url, key) {
+      console.log(`Connecting to Supabase at ${url}...`);
+      try {
+          const supabase = await createClient(url, key);
+          console.log("Supabase connection established.");
+          return supabase;
+      } catch (error) {
+          console.error(
+          "Error establishing Supabase connection:",
+          error.message
+          );
+          throw error;
+      }
+      }
+
+      // Establish Supabase connection
+      const supabaseClient = await establishSupabaseClient(
+          process.env.SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_KEY
+      );
+
+      // Retrieve the last stored message ID
+      try {
+        console.log(`Retrieving last stored message from Supabase...`);
+        var { data, error } = await supabaseClient
+          .from("gmailMessages")
+          .select("gMsgId")
+          .eq("gMsgUserId", gUserId)
+          .order("receivedAt", { ascending: false })
+          .limit(1);
+      } catch (error) {
+        console.error("Error retrieving last stored message ID:", error.message);
+        throw error;
+      }
+
+      if (data.length === 0) {
+        return null;
+      }
+
+      return data[0].gMsgId;
+    }
+
+    // Function to filter unsaved messages
+    function filterUnsavedMessages(messages, lastStoredGMsgId) {
+      // Filter messages to include only those that arrived before the lastStoredGMsgId
+      const unsavedMessages = messages.filter((message) => {
+        // Compare message ID with lastStoredGMsgId
+        // Assuming message IDs are sorted by arrival time
+        return message.id < lastStoredGMsgId;
+      });
+
+      return unsavedMessages;
+    }
+
     /////////////////////////////////////////////////////////////
 
     //const userId = steps.trigger.event.query.user; // For running on pipedream
@@ -471,8 +483,16 @@ export default {
     // Establish Gmail connection
     var gmail = await connect_to_gmail_client(userId);
 
+    // Retrieve the last stored message ID
+    const lastStoredGMsgId = await getLastStoredGMsgId(gmail.gUserId);
+    console.log(`Last stored message ID: ${lastStoredGMsgId}`);
+
+    // Filter unsaved messages
+    const unsavedMessage = filterUnsavedMessages(messages, lastStoredGMsgId);
+    console.log(`Unsaved message IDs: ${unsavedMessage.length}`);
+
     // Process messages
-    var processedMessages = await processMessages(gmail.client, messages, userId, gmail.gUserId);
+    var processedMessages = await processMessages(gmail.client, unsavedMessage, userId, gmail.gUserId);
 
     // Export the processed messages
     console.log(`Exporting results...`);
