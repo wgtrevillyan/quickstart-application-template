@@ -27,6 +27,6 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "trigger.config.ts"
-  ],
+, "libraries/subabase_functions.mjs"  ],
   "exclude": ["node_modules"]
 }

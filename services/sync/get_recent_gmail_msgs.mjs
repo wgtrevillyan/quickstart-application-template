@@ -2,12 +2,9 @@
 
 // Import necessary modules
 import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId } from "../../lib/supabase_queries.mjs";
+import { getLastStoredGMsgId, getLastGHistoryId, 
+  updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
-import {
-    getLastGHistoryId, 
-    updateLastGHistoryId 
-} from "../../lib/supabase_queries.mjs";
 import dotenv from "dotenv";
 
 // Load environment variables
