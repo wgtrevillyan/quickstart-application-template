@@ -2,9 +2,10 @@
 
 import { connectToGmailClient } from "../../lib/establish_clients.mjs";
 import { getLastStoredGMsgId } from "../../lib/supabase_queries.mjs";
+import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
 export default {
-  async run({ messages, processed_messages }) {
+  async run({ messages, processed_messages, gUserId, gHistoryId }) {
   
     // Function to filter unsaved messages
     function filterUnsavedMessages(messages, lastStoredGMsgId) {
@@ -156,7 +157,8 @@ export default {
 
       //////////////////////////////
 
-      const msgs_lst = [];
+      var msgs_lst = [];
+      var msgHistoryId = null;
 
       // Process each message
       for (let i = 0; i < messages.length; i++) {
@@ -213,6 +215,7 @@ export default {
             msgBodyText,
             msgBodyHtml,
             msgPayload;
+            
 
         if (msgResults.data.payload) {
             msgPayload = msgResults.data.payload;
@@ -247,10 +250,17 @@ export default {
             JSON.stringify(msgPayload) // payload
         );
         //console.log('Message:', msgDict);
+        
+        // Update the last stored history ID
+        if (msgHistoryId === null || msgResults.data.historyId > msgHistoryId) {
+          msgHistoryId = msgResults.data.historyId;
+          console.log("New historyId: ", msgHistoryId);
+        }
 
         msgs_lst.push(msgDict);
       }
-
+  
+      // Print errors
       if (error_msgs.length > 0) {
         console.error("Errors processing messages:");
         for (let i = 0; i < error_msgs.length; i++) {
@@ -260,7 +270,7 @@ export default {
 
       console.log("\n");
       console.log("Processed messages: ", msgs_lst.length);
-      return msgs_lst;
+      return { messages: msgs_lst, historyId: msgHistoryId };
     }
 
 
@@ -283,17 +293,19 @@ export default {
     console.log(`Unsaved messages: ${unsavedMessages.length}`);
 
     // Process messages
-    var processedMessages = await processMessages(gmail.client, unsavedMessages, userId, gmail.gUserId);
+    var result = await processMessages(gmail.client, unsavedMessages, userId, gmail.gUserId);
 
     // Export the processed messages
     console.log(`Exporting results...`);
-    this.processed_messages = processedMessages; // Export the processed messages
+    this.processed_messages = result.messages; // Export the processed messages
+    this.gUserId = gmail.gUserId; // Export the Gmail user ID
+    this.gHistoryId = result.historyId; // Export the history ID
 
     console.log(
-      `Retrieved message details for ${processedMessages.length} messages.`
+      `Retrieved message details for ${result.messages.length} messages.`
     );
     console.log("\n");
 
-    return `Retrieved Message Details: ${processedMessages.length}`;
+    return `Retrieved Message Details: ${result.messages.length}`;
   },
 };

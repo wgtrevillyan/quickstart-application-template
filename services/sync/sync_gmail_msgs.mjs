@@ -18,6 +18,8 @@ export default {
     await retrieve_msg_details.run({
       messages: messages,
       processed_messages: null,
+      gUserId: null,
+      gHistoryId: null,
     });
     var messages_with_details = retrieve_msg_details.processed_messages;
     console.log("Messages with details retrieved: ", messages_with_details.length);
@@ -25,6 +27,8 @@ export default {
     // Store the messages
     await store_gmail_msgs.run({
       messages: messages_with_details,
+      gUserId: retrieve_msg_details.gUserId,
+      gHistoryId: retrieve_msg_details.gHistoryId,
     });
     var stored_messages = store_gmail_msgs.stored_messages;
     console.log("Messages stored: ", stored_messages.length);

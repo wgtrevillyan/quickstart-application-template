@@ -1,10 +1,11 @@
 // store_gmail_msgs.mjs
 
 import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
+import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
 
 export default {
-    async run({ messages }) {
+    async run({ messages, gUserId, gHistoryId }) {
 
         const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
@@ -40,6 +41,11 @@ export default {
             for (let i = 0; i < error_msgs.length; i++) {
                 console.error(`Error ${i+1}: `, error_msgs[i]);
             }
+        }
+
+        // Store recent history ID
+        if (gHistoryId) {
+            await updateLastGHistoryId(gUserId, gHistoryId);
         }
 
         // Export the processed messages

@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     console.log("Starting sync service..."); // Log the message
 
     // Run the sync_gmail_msgs function
-    await syncGmailMsgs.run({ messages: [] });
+    await syncGmailMsgs.run({ messages: [], gHistoryId: null });
 
     console.log("Sync service completed."); // Log the message
 

@@ -6,7 +6,7 @@ import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "..
 
 
 export default {
-  async run({ messages }) {
+  async run({ messages, gHistoryId }) {
 
     //const userId = steps.trigger.event.query.user; // For running on pipedream
     const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
@@ -26,13 +26,14 @@ export default {
             startHistoryId: lastHistoryId,
         });
   
-        const history = response.data.history || [];
+        var history = response.data.history || [];
     } catch (error) {
         console.error("Error retrieving history:", error.message);
         throw error;
     }
   
     var recentMsgs = [];
+    var latestHistoryId = null;
 
     // Process the history
     for (const record of history) {
@@ -42,16 +43,18 @@ export default {
 
         recentMsgs.push(...added_messages);
       }
+
+      // Update the latest history ID
+      if (record.id && (!latestHistoryId || record.id > latestHistoryId)) {
+        latestHistoryId = record.id
+      }
     }
   
     // Process newMessages as needed
+    console.log("History:", history);
+
     console.log(`Found ${recentMsgs.length} new messages.`);
     console.log('New Messages:', recentMsgs);
-  
-    // Update the last stored history ID
-    if (response.data.historyId) {
-      await updateLastGHistoryId(gmail.gUserId, response.data.historyId);
-    }
 
     // Retrieve messages list
     //var messages_lst = //await getRecentMsgsLst(gmail.client, gmail.gUserId);
@@ -61,6 +64,7 @@ export default {
     console.log(`Exporting results...`);
   
     this.messages = recentMsgs; // Export the messages list for use in subsequent steps
+    this.gHistoryId = latestHistoryId; // Export the latest history ID
 
     console.log(`Retrieved ${recentMsgs.length} messages.`);
     console.log("\n");
