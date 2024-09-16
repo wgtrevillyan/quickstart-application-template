@@ -4,16 +4,9 @@ import syncGmailMsgs from '../../services/sync/sync_gmail_msgs.mjs';
 
 export const sync_gmail_msgs = task({
   id: "syng_gmail_msgs",
-  run: async (payload: any, { ctx }) => {
+  run: async () => {
     //logger.log("\n"); // Log a new line
     //logger.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
-
-    if (ctx) {
-      logger.log("Context: ", ctx);
-    }
-    if (payload) {
-      logger.log("Payload: ", payload);
-    }
   
     try {
       logger.log("Starting sync service..."); // Log the message
