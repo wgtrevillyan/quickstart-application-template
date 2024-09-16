@@ -1,195 +1,10 @@
 // retrieve_msg_details.mjs
 
-import { createClient } from "@supabase/supabase-js";
-import { google } from "googleapis";
-
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
+import { connectToGmailClient } from "../../lib/establish_clients.mjs";
 
 export default {
-  async run({ messages, processed_messages }) {
+  async run({ messages, processed_messages, gUserId, gHistoryId }) {
 
-    // FUNCTION: Create a Gmail client
-    async function connect_to_gmail_client(userId) {
-        // FUNCTION: Establish Supabase connection
-        async function establishSupabaseClient(url, key) {
-          console.log(`Connecting to Supabase at ${url}...`);
-          try {
-            const supabase = await createClient(url, key);
-            console.log("Supabase connection established.");
-            return supabase;
-          } catch (error) {
-            console.error(
-              "Error establishing Supabase connection:",
-              error.message
-            );
-            throw error;
-          }
-        }
-  
-        // FUNCTION: Retrieve secrets
-        async function retrieveSecret(supabase, secretNames) {
-          var secrets = {};
-          for (const secretName of secretNames) {
-            try {
-              const { data, error } = await supabase.rpc("get_secret", {
-                secret_name: secretName,
-              });
-              if (error) throw error;
-              secrets[secretName] = data;
-              console.log(`Secret retrieved.`);
-            } catch (error) {
-              console.error(
-                `Error retrieving secret '${secretName}':`,
-                error.message
-              );
-              throw error;
-            }
-          }
-          return secrets;
-        }
-  
-        // FUNCTION: Retrieve Gmail access token
-        async function retrieveGmailAccessToken(
-          clientId,
-          clientSecret,
-          refreshToken
-        ) {
-          // Create OAuth2 client which will be used to refresh the access token
-          try {
-            var oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
-            oauth2Client.setCredentials({
-              refresh_token: refreshToken,
-            });
-          } catch (error) {
-            console.error("Error creating OAuth2 client:", error.message);
-            throw error;
-          }
-  
-          // Refresh the access token
-          try {
-            const { credentials } = await oauth2Client.refreshAccessToken();
-            const newAccessToken = credentials.access_token;
-            const expiresIn = credentials.expiry_date
-              ? Math.floor((credentials.expiry_date - Date.now()) / 1000)
-              : credentials.expires_in;
-  
-            console.log(
-              `New access token obtained. Expires in ${expiresIn} seconds.`
-            );
-  
-            return credentials;
-          } catch (error) {
-            console.error("Error refreshing access token:", error.message);
-            throw error;
-          }
-        }
-  
-        // FUNCTION: Establish Gmail API connection
-        async function establishGmailConnection(secrets) {
-          const oauth2Client = await new google.auth.OAuth2(
-            secrets.gmail_client_id,
-            secrets.gmail_client_secret
-          );
-  
-          oauth2Client.setCredentials({
-            access_token: secrets.gmail_access_token,
-          });
-  
-          const gmail = await google.gmail({
-            version: "v1",
-            auth: oauth2Client,
-          });
-  
-          try {
-            // Test the connection by listing labels
-            const response = await gmail.users.labels.list({
-              userId: "me",
-            });
-  
-            const labels = response.data.labels;
-            if (!labels || labels.length === 0) {
-              console.log("No labels found.");
-              return { success: false, message: "No labels found." };
-            }
-  
-            console.log("Connection to Gmail API successful.");
-            //$.export('gmailClient', gmail); // Export the Gmail client for use in subsequent steps
-  
-            return gmail;
-          } catch (error) {
-            console.error("Error connecting to Gmail API:", error.message);
-            throw error;
-          }
-        }
-  
-        /*
-        // Establish Supabase connection
-        const supabaseClient = await establishSupabaseClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
-        );
-  
-        // Retrieve Gmail secrets
-        const commonGmailSecretNames = ["gmail_client_id", "gmail_client_secret"];
-        const commonGmailSecrets = await retrieveSecret(
-          supabaseClient,
-          commonGmailSecretNames
-        );
-  
-        // Retrieve Gmail refresh token
-        const gmailRefreshSecretId = [`gmail_refresh_token_user_${userId}`];
-        const userGmailSecrets = await retrieveSecret(
-          supabaseClient,
-          gmailRefreshSecretId
-        );
-        */
-
-        // Retrieve Gmail secrets
-        const gmail_client_id = process.env.gmail_client_id;
-        const gmail_client_secret = process.env.gmail_client_secret;
-        const modifiedUserId = userId.replace(/-/g, "_");
-        const gmail_refresh_token = process.env[`gmail_refresh_token_user_${modifiedUserId}`];
-        // console.log("gmail_client_id: ", gmail_client_id);
-        // console.log("gmail_client_secret: ", gmail_client_secret);
-        // console.log(`gmail_refresh_token_user_${modifiedUserId}: `, gmail_refresh_token);
-
-        // Retrieve Gmail access token
-        const gmailAccessToken = await retrieveGmailAccessToken(
-          gmail_client_id,
-          gmail_client_secret,
-          gmail_refresh_token
-        );
-
-        // Combine all secrets
-        const secrets = {
-          gmail_client_id,
-          gmail_client_secret,
-          gmail_refresh_token,
-          gmail_access_token: gmailAccessToken.access_token,
-        };
-  
-        // Establish Gmail connection
-        var client = await establishGmailConnection(secrets);
-  
-        // Retrieve the Gmail user ID
-        try {
-          // Call the users.getProfile method
-          const response = await client.users.getProfile({ userId: "me" });
-  
-          // Extract the email address from the response
-          var emailAddress = response.data.emailAddress;
-          //console.log("Email Address:", emailAddress);
-        } catch (error) {
-            console.error("Error retrieving Gmail user ID:", error.message);
-            throw error;
-        }
-  
-        return { client: client, gUserId: emailAddress };
-    }
-  
     // FUNCTION: Process messages
     async function processMessages(gmailClient, messages, userId, gUserId) {
       // FUNCTION: Extract data from payload
@@ -309,7 +124,8 @@ export default {
 
       //////////////////////////////
 
-      const msgs_lst = [];
+      var msgs_lst = [];
+      var msgHistoryId = null;
 
       // Process each message
       for (let i = 0; i < messages.length; i++) {
@@ -366,6 +182,7 @@ export default {
             msgBodyText,
             msgBodyHtml,
             msgPayload;
+            
 
         if (msgResults.data.payload) {
             msgPayload = msgResults.data.payload;
@@ -400,10 +217,17 @@ export default {
             JSON.stringify(msgPayload) // payload
         );
         //console.log('Message:', msgDict);
+        
+        // Update the last stored history ID
+        if (msgHistoryId === null || msgResults.data.historyId > msgHistoryId) {
+          msgHistoryId = msgResults.data.historyId;
+          console.log("New historyId: ", msgHistoryId);
+        }
 
         msgs_lst.push(msgDict);
       }
-
+  
+      // Print errors
       if (error_msgs.length > 0) {
         console.error("Errors processing messages:");
         for (let i = 0; i < error_msgs.length; i++) {
@@ -413,65 +237,9 @@ export default {
 
       console.log("\n");
       console.log("Processed messages: ", msgs_lst.length);
-      return msgs_lst;
+      return { messages: msgs_lst, historyId: msgHistoryId };
     }
 
-    // FUNCTION: Get last stored Gmail message ID from Supabase gMailMessages table
-    async function getLastStoredGMsgId(gUserId) {
-      // FUNCTION: Establish Supabase connection
-      async function establishSupabaseClient(url, key) {
-      console.log(`Connecting to Supabase at ${url}...`);
-      try {
-          const supabase = await createClient(url, key);
-          console.log("Supabase connection established.");
-          return supabase;
-      } catch (error) {
-          console.error(
-          "Error establishing Supabase connection:",
-          error.message
-          );
-          throw error;
-      }
-      }
-
-      // Establish Supabase connection
-      const supabaseClient = await establishSupabaseClient(
-          process.env.SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_KEY
-      );
-
-      // Retrieve the last stored message ID
-      try {
-        console.log(`Retrieving last stored message from Supabase...`);
-        var { data, error } = await supabaseClient
-          .from("gmailMessages")
-          .select("gMsgId")
-          .eq("gMsgUserId", gUserId)
-          .order("receivedAt", { ascending: false })
-          .limit(1);
-      } catch (error) {
-        console.error("Error retrieving last stored message ID:", error.message);
-        throw error;
-      }
-
-      if (data.length === 0) {
-        return null;
-      }
-
-      return data[0].gMsgId;
-    }
-
-    // Function to filter unsaved messages
-    function filterUnsavedMessages(messages, lastStoredGMsgId) {
-      // Filter messages to include only those that arrived before the lastStoredGMsgId
-      const unsavedMessages = messages.filter((message) => {
-        // Compare message ID with lastStoredGMsgId
-        // Assuming message IDs are sorted by arrival time
-        return message.id < lastStoredGMsgId;
-      });
-
-      return unsavedMessages;
-    }
 
     /////////////////////////////////////////////////////////////
 
@@ -481,28 +249,22 @@ export default {
     console.log(`Retrieving message details...`);
 
     // Establish Gmail connection
-    var gmail = await connect_to_gmail_client(userId);
-
-    // Retrieve the last stored message ID
-    const lastStoredGMsgId = await getLastStoredGMsgId(gmail.gUserId);
-    console.log(`Last stored message ID: ${lastStoredGMsgId}`);
-
-    // Filter unsaved messages
-    const unsavedMessage = filterUnsavedMessages(messages, lastStoredGMsgId);
-    console.log(`Unsaved message IDs: ${unsavedMessage.length}`);
+    var gmail = await connectToGmailClient(userId);
 
     // Process messages
-    var processedMessages = await processMessages(gmail.client, unsavedMessage, userId, gmail.gUserId);
+    var result = await processMessages(gmail.client, messages, userId, gmail.gUserId);
 
     // Export the processed messages
     console.log(`Exporting results...`);
-    this.processed_messages = processedMessages; // Export the processed messages
+    this.processed_messages = result.messages; // Export the processed messages
+    this.gUserId = gmail.gUserId; // Export the Gmail user ID
+    this.gHistoryId = result.historyId; // Export the history ID
 
     console.log(
-      `Retrieved message details for ${processedMessages.length} messages.`
+      `Retrieved message details for ${result.messages.length} messages.`
     );
     console.log("\n");
 
-    return `Retrieved Message Details: ${processedMessages.length}`;
+    return `Retrieved Message Details: ${result.messages.length}`;
   },
 };

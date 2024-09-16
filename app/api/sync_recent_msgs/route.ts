@@ -1,7 +1,7 @@
-// api/sync_gmail_msgs/route.ts
+// api/sync_recent_msgs/route.ts
 
 // Importing the default export from the .mjs file
-import syncGmailMsgs from '../../../services/sync/sync_gmail_msgs.mjs';
+import syncGmailMsgs from '../../../services/sync/get_recent_gmail_msgs.mjs';
 
 // Exporting the dynamic and runtime variables
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
@@ -9,14 +9,18 @@ export const runtime = "nodejs"; // nodejs or deno
 export const maxDuration = 300; // This function can run for a maximum of 60 seconds (1 minutes)
 
 export async function GET(request: Request) {
-
   console.log("\n"); // Log a new line
-  console.log(request.method, '  ', request.url, ' at time: ', new Date().toISOString()); // Log the request
+  console.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
 
   try {
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345" // The user ID
-    await syncGmailMsgs.run(userId); // Run the sync_gmail_msgs function
-    return new Response("Sync service finished."); // Return a response
+    console.log("Starting sync service..."); // Log the message
+
+    // Run the sync_gmail_msgs function
+    await syncGmailMsgs.run({ messages: [], gHistoryId: null });
+
+    console.log("Sync service completed."); // Log the message
+
+    return new Response("Sync service triggered."); // Return a response
   } catch (error) {
     console.log("An error occurred when attempting to start the synce service:"); // Log the message
     console.error(error); // Log the error

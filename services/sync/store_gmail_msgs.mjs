@@ -1,34 +1,13 @@
 // store_gmail_msgs.mjs
 
-import { createClient } from "@supabase/supabase-js";
+import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
+import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
+
 
 export default {
-    async run({ messages }) {
+    async run({ messages, gUserId, gHistoryId, msgs_stored }) {
 
-
-        // FUNCTION: Establish Supabase connection
-        async function establishSupabaseClient(url, key) {
-            console.log(`Connecting to Supabase at ${url}...`);
-            try {
-                const supabase = await createClient(url, key);
-                console.log("Supabase connection established.");
-                return supabase;
-            } catch (error) {
-                console.error(
-                    "Error establishing Supabase connection:",
-                    error.message
-                );
-                throw error;
-            }
-        }
-
-        /////////////////////////////////////////////////////////////
-
-        // Establish Supabase connection
-        const supabaseClient = await establishSupabaseClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
-        );
+        const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
         console.log("Storing messages in Supabase...");
 
@@ -64,9 +43,14 @@ export default {
             }
         }
 
+        // Store recent history ID
+        if (gHistoryId) {
+            await updateLastGHistoryId(gUserId, gHistoryId);
+        }
+
         // Export the processed messages
         console.log(`Exporting results...`);
-        this.stored_messages = total_added; // Export the total added messages
+        this.msgs_stored = total_added; // Export the total added messages
 
         console.log("\n");
 
