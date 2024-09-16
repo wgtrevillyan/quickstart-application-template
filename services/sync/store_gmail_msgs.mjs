@@ -1,34 +1,12 @@
 // store_gmail_msgs.mjs
 
-import { createClient } from "@supabase/supabase-js";
+import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
+
 
 export default {
     async run({ messages }) {
 
-
-        // FUNCTION: Establish Supabase connection
-        async function establishSupabaseClient(url, key) {
-            console.log(`Connecting to Supabase at ${url}...`);
-            try {
-                const supabase = await createClient(url, key);
-                console.log("Supabase connection established.");
-                return supabase;
-            } catch (error) {
-                console.error(
-                    "Error establishing Supabase connection:",
-                    error.message
-                );
-                throw error;
-            }
-        }
-
-        /////////////////////////////////////////////////////////////
-
-        // Establish Supabase connection
-        const supabaseClient = await establishSupabaseClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_KEY
-        );
+        const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
         console.log("Storing messages in Supabase...");
 

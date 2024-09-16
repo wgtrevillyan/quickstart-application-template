@@ -2,13 +2,8 @@
 
 // Import necessary modules
 import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, getLastGHistoryId, 
-  updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
+import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config(); 
 
 export default {
   async run({ messages }) {
@@ -24,6 +19,7 @@ export default {
 
     // Retrieve new messages
     const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
+    console.log("Last History ID:", lastHistoryId);
     try {
         const response = await gmail.client.users.history.list({
             userId: 'me',
@@ -63,13 +59,13 @@ export default {
 
     // Export messages
     console.log(`Exporting results...`);
-
+  
     this.messages = recentMsgs; // Export the messages list for use in subsequent steps
 
     console.log(`Retrieved ${recentMsgs.length} messages.`);
     console.log("\n");
 
-    return `Retrieved Gmail Messages: ${messages_lst.length}`;
+    return messages;
 
   },
 };
