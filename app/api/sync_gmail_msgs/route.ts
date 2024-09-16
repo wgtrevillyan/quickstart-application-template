@@ -14,7 +14,8 @@ export async function GET(request: Request) {
   console.log(request.method, '  ', request.url, ' at time: ', new Date().toISOString()); // Log the request
 
   try {
-    await syncGmailMsgs.run(); // Run the sync_gmail_msgs function
+    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345" // The user ID
+    await syncGmailMsgs.run(userId); // Run the sync_gmail_msgs function
     return new Response("Sync service finished."); // Return a response
   } catch (error) {
     console.log("An error occurred when attempting to start the synce service:"); // Log the message

@@ -1,18 +1,29 @@
-import { logger, task } from "@trigger.dev/sdk/v3";
+import { logger, schedules } from "@trigger.dev/sdk/v3";
 import syncGmailMsgs from '../../services/sync/sync_gmail_msgs.mjs';
 
 
-export const sync_gmail_msgs = task({
+export const sync_gmail_msgs = schedules.task({
   id: "syng-gmail-msgs",
-  run: async () => {
+  run: async (payload) => {
     //logger.log("\n"); // Log a new line
     //logger.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
+
+    if (!payload.externalId) {
+      throw new Error("External ID (userId) is required.");
+    }
   
     try {
-      logger.log("Starting sync service..."); // Log the message
-  
+
+      logger.log("Starting sync service...");
+      logger.log(`  Schedule ID: ${payload.scheduleId}`);
+      logger.log(`  Schedule At: ${payload.timestamp}`);
+      logger.log(`  Last run occured at: ${payload.lastTimestamp}`);
+      logger.log(`  External ID (userId): ${payload.externalId}`);
+
+      const userId = payload.externalId; // The user ID
+
       // Run the sync_gmail_msgs function
-      await syncGmailMsgs.run();
+      await syncGmailMsgs.run(userId); // pass the externalId in as the userId
   
       logger.log("Sync service completed."); // Log the message
   

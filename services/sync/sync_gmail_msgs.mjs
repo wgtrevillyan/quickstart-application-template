@@ -11,13 +11,13 @@ import { getLastStoredGMsgId, getLastGHistoryId } from "../../lib/supabase_queri
 
 
 export default {
-  async run() {
+  async run(userId) {
 
     console.log("Sync service started...");
     console.log("\n");
 
     // check if first time running, if so, get all messages
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
+    //const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
     const gmail = await connectToGmailClient(userId);
     const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
     const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
