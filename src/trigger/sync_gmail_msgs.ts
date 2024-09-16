@@ -3,7 +3,7 @@ import syncGmailMsgs from '../../services/sync/sync_gmail_msgs.mjs';
 
 
 export const sync_gmail_msgs = task({
-  id: "syng_gmail_msgs",
+  id: "syng-gmail-msgs",
   run: async () => {
     //logger.log("\n"); // Log a new line
     //logger.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
@@ -19,7 +19,7 @@ export const sync_gmail_msgs = task({
       return new Response("Sync service triggered."); // Return a response
     } catch (error) {
       logger.log("An error occurred when attempting to start the synce service:"); // Log the message
-      console.error(error); // Log the error
+      logger.error; // Log the error
       return new Response("Error: " + error, { status: 500 }); // Return a response
     }
   },
