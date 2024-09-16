@@ -8,6 +8,19 @@ import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "..
 export default {
   async run({ messages, gHistoryId }) {
 
+    // FUNCTION: Reformat initial messages list
+    function reformatMessages(msgsObject) {
+      return msgsObject.map(item => {
+        return {
+          id: item.message.id,
+          threadId: item.message.threadId
+        };
+      });
+    }
+
+
+    //////////////////////////////////////////
+
     //const userId = steps.trigger.event.query.user; // For running on pipedream
     const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
 
@@ -19,7 +32,6 @@ export default {
 
     // Retrieve new messages
     const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
-    console.log("Last History ID:", lastHistoryId);
     try {
         const response = await gmail.client.users.history.list({
             userId: 'me',
@@ -39,8 +51,6 @@ export default {
     for (const record of history) {
       if (record.messagesAdded) {
         const added_messages = record.messagesAdded;
-        console.log('Added Messages:', added_messages);
-
         recentMsgs.push(...added_messages);
       }
 
@@ -49,27 +59,28 @@ export default {
         latestHistoryId = record.id
       }
     }
-  
-    // Process newMessages as needed
-    console.log("History:", history);
 
-    console.log(`Found ${recentMsgs.length} new messages.`);
-    console.log('New Messages:', recentMsgs);
+    // Reformat the messages list
+    const formattedMsgs = reformatMessages(recentMsgs);
 
-    // Retrieve messages list
-    //var messages_lst = //await getRecentMsgsLst(gmail.client, gmail.gUserId);
-    //console.log("Messages: ", messages);
+
+    if (formattedMsgs.length == 0) {
+      return "No new messages found.";
+    } else {
+      console.log(`Found ${formattedMsgs.length} new messages.`);
+    }
+
 
     // Export messages
     console.log(`Exporting results...`);
   
-    this.messages = recentMsgs; // Export the messages list for use in subsequent steps
+    this.messages = formattedMsgs; // Export the messages list for use in subsequent steps
     this.gHistoryId = latestHistoryId; // Export the latest history ID
 
-    console.log(`Retrieved ${recentMsgs.length} messages.`);
+    console.log(`Retrieved ${formattedMsgs.length} messages.`);
     console.log("\n");
 
-    return messages;
+    return `Retrieved Gmail Messages: ${formattedMsgs.length}`;
 
   },
 };

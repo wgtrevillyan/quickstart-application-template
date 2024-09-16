@@ -5,7 +5,7 @@ import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
 
 export default {
-    async run({ messages, gUserId, gHistoryId }) {
+    async run({ messages, gUserId, gHistoryId, msgs_stored }) {
 
         const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
@@ -50,7 +50,7 @@ export default {
 
         // Export the processed messages
         console.log(`Exporting results...`);
-        this.stored_messages = total_added; // Export the total added messages
+        this.msgs_stored = total_added; // Export the total added messages
 
         console.log("\n");
 

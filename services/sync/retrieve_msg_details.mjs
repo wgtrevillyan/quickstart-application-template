@@ -1,42 +1,9 @@
 // retrieve_msg_details.mjs
 
 import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId } from "../../lib/supabase_queries.mjs";
-import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
 
 export default {
   async run({ messages, processed_messages, gUserId, gHistoryId }) {
-  
-    // Function to filter unsaved messages
-    function filterUnsavedMessages(messages, lastStoredGMsgId) {
-      // Check if the last stored message ID is available
-      if (!lastStoredGMsgId) {
-        console.log("No last stored message ID found.");
-        return messages;
-      }
-
-      var unsavedMessages = [];
-
-      // Filter unsaved messages
-      for (let i = 0; i < messages.length; i++) {
-        // Check if the message is available
-        if (!messages[i].id) {
-          console.log("No id found.");
-          continue;
-        }
-
-        // Check if the last stored message has been reached
-        if (messages[i].id === lastStoredGMsgId) {
-          console.log(`Last stored message reached: ${lastStoredGMsgId}. Exiting loop...`);
-          break;
-        }
-
-        // Add the message to the list of unsaved messages
-        unsavedMessages.push(messages[i]);
-      }
-
-      return unsavedMessages;
-    }   
 
     // FUNCTION: Process messages
     async function processMessages(gmailClient, messages, userId, gUserId) {
@@ -284,16 +251,8 @@ export default {
     // Establish Gmail connection
     var gmail = await connectToGmailClient(userId);
 
-    // Retrieve the last stored message ID
-    const lastStoredGMsgId = await getLastStoredGMsgId(gmail.gUserId);
-    console.log(`Last stored message ID: ${lastStoredGMsgId}`);
-
-    // Filter unsaved messages
-    const unsavedMessages = filterUnsavedMessages(messages, lastStoredGMsgId);
-    console.log(`Unsaved messages: ${unsavedMessages.length}`);
-
     // Process messages
-    var result = await processMessages(gmail.client, unsavedMessages, userId, gmail.gUserId);
+    var result = await processMessages(gmail.client, messages, userId, gmail.gUserId);
 
     // Export the processed messages
     console.log(`Exporting results...`);
