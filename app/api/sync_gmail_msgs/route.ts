@@ -11,7 +11,7 @@ export const maxDuration = 300; // This function can run for a maximum of 60 sec
 export async function GET(request: Request) {
 
   console.log("\n"); // Log a new line
-  console.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
+  console.log(request.method, '  ', request.url, ' at time: ', new Date().toISOString()); // Log the request
 
   try {
     await syncGmailMsgs.run(); // Run the sync_gmail_msgs function
