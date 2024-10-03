@@ -1,7 +1,7 @@
 // get_recent_gmail_msgs.mjs:
 
 // Import necessary modules
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
+import { google } from "googleapis";
 import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
 
 export default {
@@ -12,44 +12,131 @@ export default {
         async function decodeTokens(code) {
             
             // Establish Gmail connection
-            const gmail = await connectToGmailClient();
-            
+            const clientId = process.env.GMAIL_CLIENT_ID_WEB;
+            const clientSecret = process.env.GMAIL_CLIENT_SECRET_WEB;
+            console.log('Client ID:', clientId);
+            console.log('Client Secret:', clientSecret);
+
             try {
+                console.log('Establishing OAuth2 client...');
+                var oauth2Client = new google.auth.OAuth2(
+                    clientId,
+                    clientSecret,
+                    'https://newsnook.flutterflow.app/gmailOauth2callback'
+                );
+                /*
+                const authUrl = oauth2Client.generateAuthUrl({
+                    access_type: 'offline', // Request offline access to receive a refresh token
+                    scope: [
+                      'https://www.googleapis.com/auth/gmail.readonly'
+                    ],
+                  });
+                */
+            
                 console.log("Decoding refresh token...");
-                const { tokens } = await gmail.client.getToken(code);
-                //console.log("Access token: ", tokens.access_token);
-                //console.log("Refresh token: ", tokens.refresh_token);
+                const { tokens } = await oauth2Client.getToken(code);
+                //console.log("tokens: ", tokens);
+                //console.log("tokens.access_token: ", tokens.access_token);
+                console.log("tokens.refresh_token: ", tokens.refresh_token);
+
+                if (!tokens.refresh_token) {
+                    throw new Error("No refresh token found in the response.");
+                }
+
+                return tokens.refresh_token;
             } catch (error) {
                 console.error("Error retrieving tokens:", error.message);
-                throw error;
+                return null;
             }
 
-            return tokens.refresh_token;
+            
         }
 
         // FUNCTION: Store refresh token in Supabase vault
         async function storeRefreshToken(secretValue, uniqueName, description) {
+
+            // FUNCTION: Update the refresh token in the Supabase vault
+            async function updateRefreshToken(secretValue, uniqueName, description) {
+
+                const supabase = await connectToSupabaseClient(); // Create a new Supabase client
+
+                // Retrieve the secret ID from the vault
+                console.log('name:', uniqueName);
+                try {
+                    console.log('name:', uniqueName);
+                    const { data, error } = await supabase.rpc('get_secret_id', { secrect_name: uniqueName }); 
+                    if (error) {
+                        throw new Error(error.message);
+                    }
+                
+                    console.log('Secret ID retrieved successfully:', data);
+                } catch (err) {  
+                    console.error('Secret ID retrieval failed. Unexpected error:', err);
+                    return false;
+                }
+
+                // Update the secret in the vault
+                try {
+                    const { data, error } = await supabase.rpc('update_secret', {
+                        id: secretId,
+                        secret: secretValue,
+                        name: uniqueName,
+                        description: description,
+                    });
+                    
+                    if (error) {
+                        throw new Error(error.message);
+                    } else {
+                        return true;
+                    }
+                } catch (err) {
+                    console.error('Update of token failed. Unexpected error:', err);   
+                    return false;
+                }
+                
+            }
+
+
+            //////////////////////////////////////
             
             const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
             
             // Store the token in the Supabase vault
             console.log("Storing token in Supabase vault...");
             try {
-                const { data, error } = await supabaseClient.rpc('vault.create_secret', {
+                const { data, error } = await supabaseClient.rpc('create_secret', {
                     secret: secretValue,
                     name: uniqueName,
                     description: description,
                 });
-            
+
+                // Check if the token already exists
+                
+
                 if (error) {
-                    console.error('Error storing secret:', error);
-                    return;
+
+                    if (error.code === '23505') {
+                        console.log(`${uniqueName} already exists. Updating the token...`);
+    
+    
+                        const tokenUpdated = await updateRefreshToken(secretValue, uniqueName, description); // Update the token in the vault
+    
+                        if (!tokenUpdated) {
+                            throw new Error("Error updating token.");
+                        }  
+                    } else {
+                        throw new Error(error.message);
+                    }
+                
+                } else {
+                    console.log('Token stored successfully:', data);
+
+                    return true;
                 }
-            
-                console.log('Token stored successfully:', data);
+                
             } catch (err) {
                 console.error('Unexpected error:', err);   
-                throw err; 
+                return false;
             }
         }
 
@@ -61,19 +148,15 @@ export default {
             // Retrieve the token from the Supabase vault
             console.log("Retrieving token from Supabase vault...");
             try {
-                const { data, error } = await supabaseClient.rpc('vault.get_secret', {
-                    name: uniqueName,
-                });
+                const { data, error } = await supabaseClient.rpc('get_secret', { secrect_name: uniqueName }); // Retrieve the secret from the vault
             
                 if (error) {
-                    console.error('Error retrieving secret:', error);
-                    return false;
+                    throw new Error(error.message);
                 }
-            
-                console.log('Token retrieved successfully:', data);
+        
             } catch (err) {
-                console.error('Unexpected error:', err);   
-                throw err; 
+                console.error('Error when verifying successful storage of refresh token:', err);
+                return false;
             }
 
             // Check if the secret is not null
@@ -86,11 +169,23 @@ export default {
 
         //////////////////////////////////////////////////////
 
-        const refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
-        await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_USER_${user_id}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
-        const tokenStored = await verifyTokenStorage(`GMAIL_REFRESH_TOKEN_USER_${user_id}`); // Verify that the token was properly stored
+        try {
+            const refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
+            const result = await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_USER_${user_id}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
+            if (result) {
+                return { token_stored: true };
+            } else {
+                throw new Error("Error storing refresh token.");
+            }
+        } catch (error) {
+            console.error("Error storing refresh token:", error);
+            return { token_stored: false };
+        }
         
-        i = 0;
+        /*
+        var tokenStored = await verifyTokenStorage(`GMAIL_REFRESH_TOKEN_USER_${user_id}`); // Verify that the token was properly stored
+        
+        var i = 0;
         while (!tokenStored) {
             console.log("Error storing refresh token. Retrying...");
             tokenStored = await verifyTokenStorage(`GMAIL_REFRESH_TOKEN_USER_${user_id}`); // Verify that the token was properly stored
@@ -102,7 +197,8 @@ export default {
 
             i++;
         }
+        */
 
-        return { token_stored: tokenStored };
+        
     }
 }

@@ -16,7 +16,8 @@ export async function POST(request: Request): Promise<Response> { {
     try {
 
         // Parse the request body to get userId and code
-        const { userId, code } = await request.json();
+        const userId = request.headers.get("userid");
+        const code = request.headers.get("code");
 
         if (!userId || !code) {
             return new Response(JSON.stringify({ success: false, error: 'Missing userId or code' }), { status: 400 });
@@ -32,10 +33,14 @@ export async function POST(request: Request): Promise<Response> { {
         }
 
         return new Response(JSON.stringify({ success: true }), { status: 200 });
-    } catch (error) {
+    } catch (e) {
+
+        // Type assertion
+        const error = e as Error;
+
         console.log("An error occurred when attempting to store the refresh token:"); // Log the message
-        console.error(error); // Log the error
-        console.error('Error storing refresh token:', error);
-        return new Response(JSON.stringify({ success: false, error: error }), { status: 500 });
+        console.error(e); // Log the error
+
+        return new Response(JSON.stringify({ success: false, error: error.message || 'An unknown error occurred' }), { status: 500 });
     }
 }}
