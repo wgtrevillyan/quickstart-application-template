@@ -59,17 +59,22 @@ export default {
             async function updateRefreshToken(secretValue, uniqueName, description) {
 
                 const supabase = await connectToSupabaseClient(); // Create a new Supabase client
+                var secretId = null; // Initialize the secret ID
 
-                // Retrieve the secret ID from the vault
-                console.log('name:', uniqueName);
+                // Retrieve the secret ID from the vault           
                 try {
-                    console.log('name:', uniqueName);
-                    const { data, error } = await supabase.rpc('get_secret_id', { secrect_name: uniqueName }); 
+                    console.log("Retrieving secret ID...");
+                    const { data, error } = await supabase.rpc('get_secret_id', { secret_name: uniqueName }); 
+
                     if (error) {
                         throw new Error(error.message);
+                    } else if (data === null) {
+                        throw new Error('Secret ID not found or empty.');
+                    } else {
+                        //console.log('Secret ID retrieved successfully:', data);
+                        secretId = data;
                     }
                 
-                    console.log('Secret ID retrieved successfully:', data);
                 } catch (err) {  
                     console.error('Secret ID retrieval failed. Unexpected error:', err);
                     return false;
@@ -77,6 +82,7 @@ export default {
 
                 // Update the secret in the vault
                 try {
+                    console.log("Updating token in Supabase vault...");
                     const { data, error } = await supabase.rpc('update_secret', {
                         id: secretId,
                         secret: secretValue,
@@ -87,6 +93,7 @@ export default {
                     if (error) {
                         throw new Error(error.message);
                     } else {
+                        console.log('Token updated successfully.');
                         return true;
                     }
                 } catch (err) {
@@ -110,27 +117,34 @@ export default {
                     description: description,
                 });
 
-                // Check if the token already exists
                 
-
                 if (error) {
 
+                    // Check if the token already exists
                     if (error.code === '23505') {
                         console.log(`${uniqueName} already exists. Updating the token...`);
     
-    
-                        const tokenUpdated = await updateRefreshToken(secretValue, uniqueName, description); // Update the token in the vault
-    
-                        if (!tokenUpdated) {
-                            throw new Error("Error updating token.");
-                        }  
+                        console.log("\n");
+                        try {
+                            const tokenUpdated = await updateRefreshToken(secretValue, uniqueName, description); // Update the token in the vault
+                            
+                            if (!tokenUpdated) {
+                                throw new Error("Error updating token: tokenUpdated returned false.");
+                            } else {
+                                return true;
+                            }
+                        } catch (err) {
+                            throw new Error(err.message);
+                        }   
+   
                     } else {
                         throw new Error(error.message);
                     }
                 
+                } else if (data === null) {
+                    throw new Error('Token not stored. Returned data for UUID is null.');
                 } else {
                     console.log('Token stored successfully:', data);
-
                     return true;
                 }
                 
@@ -148,7 +162,7 @@ export default {
             // Retrieve the token from the Supabase vault
             console.log("Retrieving token from Supabase vault...");
             try {
-                const { data, error } = await supabaseClient.rpc('get_secret', { secrect_name: uniqueName }); // Retrieve the secret from the vault
+                const { data, error } = await supabaseClient.rpc('get_secret', { secret_name: uniqueName }); // Retrieve the secret from the vault
             
                 if (error) {
                     throw new Error(error.message);
@@ -172,10 +186,11 @@ export default {
         try {
             const refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
             const result = await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_USER_${user_id}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
+            console.log("storeRefreshToken() result:", result);
             if (result) {
                 return { token_stored: true };
             } else {
-                throw new Error("Error storing refresh token.");
+                throw new Error("storeRefreshToken() failed returing false.");
             }
         } catch (error) {
             console.error("Error storing refresh token:", error);
