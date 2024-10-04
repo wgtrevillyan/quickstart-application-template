@@ -14,8 +14,8 @@ export default {
             // Establish Gmail connection
             const clientId = process.env.GMAIL_CLIENT_ID_WEB;
             const clientSecret = process.env.GMAIL_CLIENT_SECRET_WEB;
-            console.log('Client ID:', clientId);
-            console.log('Client Secret:', clientSecret);
+            //console.log('Client ID:', clientId);
+            //console.log('Client Secret:', clientSecret);
 
             try {
                 console.log('Establishing OAuth2 client...');
@@ -37,7 +37,7 @@ export default {
                 const { tokens } = await oauth2Client.getToken(code);
                 //console.log("tokens: ", tokens);
                 //console.log("tokens.access_token: ", tokens.access_token);
-                console.log("tokens.refresh_token: ", tokens.refresh_token);
+                //console.log("tokens.refresh_token: ", tokens.refresh_token);
 
                 if (!tokens.refresh_token) {
                     throw new Error("No refresh token found in the response.");
@@ -184,9 +184,9 @@ export default {
         //////////////////////////////////////////////////////
 
         try {
-            const refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
+            var refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
             const result = await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_USER_${user_id}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
-            console.log("storeRefreshToken() result:", result);
+            //console.log("storeRefreshToken() result:", result);
             if (result) {
                 return { token_stored: true };
             } else {
@@ -196,23 +196,6 @@ export default {
             console.error("Error storing refresh token:", error);
             return { token_stored: false };
         }
-        
-        /*
-        var tokenStored = await verifyTokenStorage(`GMAIL_REFRESH_TOKEN_USER_${user_id}`); // Verify that the token was properly stored
-        
-        var i = 0;
-        while (!tokenStored) {
-            console.log("Error storing refresh token. Retrying...");
-            tokenStored = await verifyTokenStorage(`GMAIL_REFRESH_TOKEN_USER_${user_id}`); // Verify that the token was properly stored
-
-            if (i > 5) {
-                console.log("Error storing refresh token. Exiting...");
-                break;
-            }
-
-            i++;
-        }
-        */
 
         
     }
