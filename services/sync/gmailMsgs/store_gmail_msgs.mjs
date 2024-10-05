@@ -5,7 +5,7 @@ import { updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
-    async run({ messages, gUserId, gHistoryId, msgs_stored }) {
+    async run({ messages, gUserId, gHistoryId, msgs_stored}) {
 
         const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
@@ -14,6 +14,7 @@ export default {
         //var messages = steps.retrieve_msg_details.messages[0] // define messages for pipedream only
 
         const tableName = `gmailMessages`;
+        let storedMsgs = [];
         let error_msgs = [];
         let total_added = 0;
         for (let i = 0; i < messages.length; i++) {
@@ -28,6 +29,7 @@ export default {
                     error_msgs.push(error);
                 } else {
                     total_added++; // Increment only if there is no error
+                    storedMsgs.push(messages[i]); // Store the message in the stored messages list
                 }
             } catch (error) {
                 error_msgs.push(error);
@@ -51,6 +53,7 @@ export default {
 
         // Export the processed messages
         console.log(`Exporting results...`);
+        this.stored_msgs = storedMsgs; // Export the stored messages
         this.msgs_stored = total_added; // Export the total added messages
 
         console.log("\n");

@@ -1,48 +1,10 @@
 // sync_letter_issues.mjs
 
-import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
+import { connectToSupabaseClient } from "../../../lib/establish_clients.mjs";
+import { getEmailAccountIds } from "../../../lib/supabase_queries.mjs";
+import { getAuthId } from "../../../lib/supabase_queries.mjs";
 
 const supabaseClient = async () => await connectToSupabaseClient();
-
-const getAuthId = async (userId) => {
-  try {
-    const { data, error } = await supabaseClient()
-      .from('users')
-      .select('authId')
-      .eq('id', userId);
-
-    if (error) {
-      throw new Error(error.message);
-    } else if (data === null) {
-      throw new Error('Auth id not retrieved. Returned data is null.');
-    } else {
-      return data;
-    }
-  } catch (err) {
-    console.error('Retrieval of auth id failed. Unexpected error:', err);
-    return null;
-  }
-};
-
-const getEmailAccountIds = async (userId) => {
-  try {
-    const { data, error } = await supabaseClient()
-      .from('emailAccounts')
-      .select('id')
-      .eq('userId', userId);
-
-    if (error) {
-      throw new Error(error.message);
-    } else if (data === null) {
-      throw new Error('Email account ids not retrieved. Returned data is null.');
-    } else {
-      return data;
-    }
-  } catch (err) {
-    console.error('Retrieval of email account ids failed. Unexpected error:', err);
-    return null;
-  }
-};
 
 const getApprovedSenderAddresses = async (userId, emailAccountId) => {
   try {
