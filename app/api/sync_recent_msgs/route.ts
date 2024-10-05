@@ -1,7 +1,7 @@
 // api/sync_recent_msgs/route.ts
 
 // Importing the default export from the .mjs file
-import syncGmailMsgs from '../../../services/sync/get_recent_gmail_msgs.mjs';
+import syncGmailMsgs from '../../../services/sync/gmailMsgs/get_recent_gmail_msgs.mjs';
 
 // Exporting the dynamic and runtime variables
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
