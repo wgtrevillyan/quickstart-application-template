@@ -2,10 +2,10 @@
 
 // Import necessary modules
 import { count } from "console";
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
-import { isGmailMsgStored } from "../../lib/supabase_queries.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
+import { connectToSupabaseClient } from "../../../lib/establish_clients.mjs";
+import { getLastStoredGMsgId, updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
+import { isGmailMsgStored } from "../../../lib/supabase_queries.mjs";
 
 
 export default {

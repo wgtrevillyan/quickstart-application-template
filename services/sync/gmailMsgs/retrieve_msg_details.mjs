@@ -1,6 +1,6 @@
 // retrieve_msg_details.mjs
 
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
 
 export default {
   async run({ messages, processed_messages, gUserId, gHistoryId }) {

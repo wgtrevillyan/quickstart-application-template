@@ -1,7 +1,7 @@
 // store_gmail_msgs.mjs
 
-import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
-import { updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
+import { connectToSupabaseClient } from "../../../lib/establish_clients.mjs";
+import { updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {

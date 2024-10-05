@@ -6,8 +6,8 @@ import retrieve_msg_details from "./retrieve_msg_details.mjs";
 import store_gmail_msgs from "./store_gmail_msgs.mjs";
 
 
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, getLastGHistoryId } from "../../lib/supabase_queries.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
+import { getLastStoredGMsgId, getLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
