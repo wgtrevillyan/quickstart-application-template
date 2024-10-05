@@ -23,6 +23,7 @@ export default {
             // Store the message in Supabase
             try {
                 const { data, error } = await supabaseClient.from(tableName).insert(messages[i]);
+
                 if (error) {
                     error_msgs.push(error);
                 } else {

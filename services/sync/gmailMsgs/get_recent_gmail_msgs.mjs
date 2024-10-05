@@ -1,8 +1,8 @@
 // get_recent_gmail_msgs.mjs:
 
 // Import necessary modules
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
+import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {

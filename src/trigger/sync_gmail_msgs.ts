@@ -1,5 +1,7 @@
+// src/trigger/sync_gmail_msgs.ts
+
 import { logger, schedules } from "@trigger.dev/sdk/v3";
-import syncGmailMsgs from '../../services/sync/sync_gmail_msgs.mjs';
+import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
 
 
 export const sync_gmail_msgs = schedules.task({

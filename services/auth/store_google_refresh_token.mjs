@@ -83,7 +83,7 @@ export default {
                 // Update the secret in the vault
                 try {
                     console.log("Updating token in Supabase vault...");
-                    const { data, error } = await supabase.rpc('update_secret', {
+                    const { data, error, status, statusText } = await supabase.rpc('update_secret', {
                         id: secretId,
                         secret: secretValue,
                         name: uniqueName,
@@ -92,6 +92,8 @@ export default {
                     
                     if (error) {
                         throw new Error(error.message);
+                    } else if (status !== 200) {
+                        throw new Error(`Update of token failed. Unexpected error: ${status} ${statusText}`);
                     } else {
                         console.log('Token updated successfully.');
                         return true;
@@ -111,7 +113,7 @@ export default {
             // Store the token in the Supabase vault
             console.log("Storing token in Supabase vault...");
             try {
-                const { data, error } = await supabaseClient.rpc('create_secret', {
+                const { data, error, status, statusText } = await supabaseClient.rpc('create_secret', {
                     secret: secretValue,
                     name: uniqueName,
                     description: description,
@@ -140,7 +142,8 @@ export default {
                     } else {
                         throw new Error(error.message);
                     }
-                
+                } else if (status !== 200) {
+                    throw new Error(`Token not stored. Unexpected error: ${status} ${statusText}`);
                 } else if (data === null) {
                     throw new Error('Token not stored. Returned data for UUID is null.');
                 } else {
