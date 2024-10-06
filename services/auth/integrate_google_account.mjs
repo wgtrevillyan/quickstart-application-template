@@ -36,17 +36,23 @@ export default {
                 
                 // Decode code to get refresh token and access token
                 console.log("Decoding refresh token...");
-                const { tokens } = await oauth2Client.getToken(code);
+                const { tokens, error } = await oauth2Client.getToken(code);
 
-                if (!tokens.refresh_token) {
+                if (error) {
+                    throw new Error('Error when running getToken(code): ', error.message);
+                } else if (!tokens.refresh_token) {
                     throw new Error(`No refresh token found in the http response, returning: ${tokens}`);
+                } else if (!tokens.access_token) {
+                    throw new Error(`No access token found in the http response, returning: ${tokens}`);
                 }
+
                 oauth2Client.setCredentials({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
 
                 return { refreshToken: tokens.refresh_token, gmailClient: oauth2Client };
-            } catch (error) {
-                console.error("Error retrieving tokens: ", error.message);
-                return null;
+                
+            } catch (e) {
+                console.error("Error retrieving tokens: ", e.message);
+                throw e;
             }
 
             
@@ -56,20 +62,23 @@ export default {
         async function getGoogleAccountInfo(oauth2Client) {
             
             try {
-                const response = await oauth2Client.users.getProfile({
+                console.log("Retrieving google account info...");
+                const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+                const response = await gmail.users.getProfile({
                     userId: 'me'
                 });
-    
-                if (!gmailAccount.data) {
-                    throw new Error(`Failed to retrieve gmail account info with refresh token, returning ${gmailAccount}`);
-                }
-                const gmailAccount = response.data;
-                console.log("Google account info: ", gmailAccount);
 
-                return gmailAccount
+                if (!response.data) {
+                    throw new Error(`Failed to retrieve gmail account info with refresh token, returning ${response}`);
+                }
+
+                const gmailAccountInfo = response.data;
+                //console.log("Google account info: ", gmailAccountInfo);
+
+                return gmailAccountInfo
             } catch (e) {
-                console.error(e.message);
-                throw error;
+                console.error('Unexpected error while retrieving google account info: ', e.message);
+                throw e;
             }
         }
 
@@ -183,14 +192,25 @@ export default {
         try {
             // Decode the tokens and retrieve the refresh token
             const decodeResults = await decodeTokens(code); 
+            if (decodeResults.error) {
+                throw new Error("Error decoding tokens: ", decodeResults.error);
+            } else if (!decodeResults.refreshToken) {
+                throw new Error("Error decoding tokens, failing to return refreshToken.");
+            } else if (!decodeResults.gmailClient) {
+                throw new Error("Error decoding tokens, failing to return gmailClient.");
+            }
+
             const gmailClient = decodeResults.gmailClient;
             const refreshToken = decodeResults.refreshToken;
 
             // Get google account info
-            const gAccountInfo = getGoogleAccountInfo(gmailClient);
+            const gAccountInfo = await getGoogleAccountInfo(gmailClient);
+            if (!gAccountInfo) {
+                throw new Error("Error retrieving google account info, returning: ", gAccountInfo);
+            }
             
             // Store the Gmail account
-            const accountId = await storeGmailAccount({userId: userId, gAccountInfo: gAccountInfo });
+            const accountId = await storeGmailAccount.run({userId: user_id, gAccountInfo: gAccountInfo });
             if (!accountId || accountId === null ) {
                 throw new Error("Error storing user gmail account in emailAccounts table within Supabase, returning false.");
             }
@@ -205,7 +225,7 @@ export default {
             }
         } catch (error) {
             console.error("Error storing refresh token:", error);
-            return { token_stored: false };
+            return { token_stored: false, error: error };
         }
 
         

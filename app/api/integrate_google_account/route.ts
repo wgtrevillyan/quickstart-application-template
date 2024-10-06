@@ -26,13 +26,13 @@ export async function POST(request: Request): Promise<Response> { {
         // Run the storeRefreshToken function
         const result = await integrateGoogleAccount.run({ user_id: userId, code: code });
 
-        const tokenStored = result.token_stored; // Set the token stored flag
-
-        if (!tokenStored) {
-            throw new Error("Failed to store refresh token");
+        if (result.error) {
+            throw new Error(`Unexpected error storing refresh token: ${result.error}`);
+        } else if (!result.token_stored) {
+            throw new Error("Failed to store refresh token, returning");
+        } else {
+            return new Response(JSON.stringify({ success: true }), { status: 200 });
         }
-
-        return new Response(JSON.stringify({ success: true }), { status: 200 });
     } catch (e) {
 
         // Type assertion
