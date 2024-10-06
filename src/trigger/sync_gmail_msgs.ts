@@ -38,7 +38,7 @@ export const sync_gmail_msgs = schedules.task({
       for (const emailAccountId in emailAccountIds) {
 
         // Run sync_gmail_msgs function
-        result = await syncGmailMsgs.run(userId);
+        result = await syncGmailMsgs.run(emailAccountId);
 
         // Handle sync result
         if (result.error) {
