@@ -33,6 +33,7 @@ const getGmailMessageIds = async (senderAddresses) => {
     const { data, error } = await supabaseClient()
       .from('gmailMessages')
       .select('id')
+      .eq('syncedToIssues', false)
       .in('senderAddress', senderAddresses);
 
     if (error) {
@@ -99,6 +100,27 @@ const storeMessageDetails = async (authId, emailAccountId, gmailMessageId, messa
   }
 };
 
+const markMsgAsSynced = async (emailAccountId, gmailMessageId) => {
+  try {
+    const { data, status, statusText, error } = await supabaseClient()
+      .from('gmailMessages')
+      .eq('gMsgId', gmailMessageId)
+      .update('syncedToIssues', true);
+
+    if (error) {
+      throw new Error(error.message);
+    } else if (status !== 200) {
+      throw new Error(`Sync status not updated. Unexpected error: ${status} ${statusText}`);
+    } else {
+      return true;
+    }
+
+  } catch (e) {
+    console.error('Unexpected error occured while marking gmail message as synced', e.message);
+    return false;
+  }
+};
+
 export default {
   async run(userId) {
     console.log("Sync service started...");
@@ -111,35 +133,47 @@ export default {
             throw new Error('Auth user id not retrieved.');
         }
 
+        // Get email account IDs
         let issuesSynced = 0;
         let issueSyncErrors = 0;
         for (let i = 0; i < emailAccountIds.length; i++) {
-        const senderAddresses = await getApprovedSenderAddresses(userId, emailAccountIds[i]);
-        if (!senderAddresses) {
-            console.error(`No approved sender addresses retrieved for email account: ${emailAccountsIds[i]}`);
-            continue;
-        }
+          const senderAddresses = await getApprovedSenderAddresses(userId, emailAccountIds[i]);
+          if (!senderAddresses) {
+              console.error(`No approved sender addresses retrieved for email account: ${emailAccountsIds[i]}`);
+              continue;
+          }
 
-        const gmailMessageIds = await getGmailMessageIds(senderAddresses);
-        if (!gmailMessageIds) {
-            console.error(`Gmail message ids not retrieved for email account: ${emailAccountsIds[i]}`);
-            continue;
-        }
+          // Retrieve the gmail message ids
+          const gmailMessageIds = await getGmailMessageIds(senderAddresses);
+          if (!gmailMessageIds) {
+              console.error(`Gmail message ids not retrieved for email account: ${emailAccountsIds[i]}`);
+              continue;
+          }
 
-        for (let j = 0; j < gmailMessageIds.length; j++) {
-            const messageDetails = await getMessageDetails(gmailMessageIds[j]);
-            if (!messageDetails) {
-                issueSyncErrors++;
-                continue;
-            }
+          // Sync the messages
+          for (let j = 0; j < gmailMessageIds.length; j++) {
+            
+              // Retrieve the message details
+              const messageDetails = await getMessageDetails(gmailMessageIds[j]);
+              if (!messageDetails) {
+                  issueSyncErrors++;
+                  continue;
+              }
 
-            const stored = await storeMessageDetails(authId, emailAccountIds[i], gmailMessageIds[j], messageDetails);
-            if (!stored) {
-                issueSyncErrors++;
-            } else {
-                issuesSynced++;
-            }
-        }
+              // Store the message details
+              const stored = await storeMessageDetails(authId, emailAccountIds[i], gmailMessageIds[j], messageDetails);
+              if (!stored) {
+                  issueSyncErrors++;
+              } else {
+                  // Mark the message as synced
+                  const msgMarked = await markMsgAsSynced(emailAccountIds[i], gmailMessageIds[j]);
+                  if (!msgMarked) {
+                      issueSyncErrors++;
+                  } else {
+                    issuesSynced++;
+                  }
+              }
+          }
         }
 
         if (issueStorageErrors > 0) {
