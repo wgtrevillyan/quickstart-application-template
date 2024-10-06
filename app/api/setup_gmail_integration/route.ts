@@ -1,7 +1,7 @@
 // api/store_google_refresh_token/route.ts
 
 // Importing the default export from the .mjs file
-import storeRefreshToken from '../../../services/auth/store_google_refresh_token.mjs';
+import integrateGoogleAccount from '../../../services/auth/integrate_google_account.mjs';
 
 // Exporting the dynamic and runtime variables
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> { {
         }
 
         // Run the storeRefreshToken function
-        const result = await storeRefreshToken.run({ user_id: userId, code: code });
+        const result = await integrateGoogleAccount.run({ user_id: userId, code: code });
 
         const tokenStored = result.token_stored; // Set the token stored flag
 

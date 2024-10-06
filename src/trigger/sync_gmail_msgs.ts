@@ -2,6 +2,7 @@
 
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
+import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
 
 /**
  * Sync Gmail Messages Task
@@ -15,7 +16,7 @@ export const sync_gmail_msgs = schedules.task({
     try {
       // Validate payload
       if (!payload.externalId) {
-        throw new Error("External ID (userId) is required.");
+        return new Response(JSON.stringify({ success: false, error: "External ID (userId) is required." }), { status: 400 });
       }
 
       const userId = payload.externalId;
@@ -27,30 +28,26 @@ export const sync_gmail_msgs = schedules.task({
       logger.log(`  Last run occured at: ${payload.lastTimestamp}`);
       logger.log(`  External ID (userId): ${userId}`);
 
-      // Run sync_gmail_msgs function
-      result = await syncGmailMsgs.run(userId);
+      // Get user's email account ids
+      const emailAccountIds = await getEmailAccountIds(userId);
+      if (!emailAccountIds) {
+          throw new Error('No email account ids retrieved.');
+      }
 
-      // Handle sync result
-      if (result.error) {
-        throw new Error(`Unexpected error occurred while syncing messages: \n${result.error}`);
-      } else if (!result.synced) {
-        throw new Error("Failed to sync messages");
-      } else {
-        logger.log(`Sync service completed. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
+      // loop through all email accounts for user
+      for (const emailAccountId in emailAccountIds) {
 
-        // Return successful response
-        return new Response(JSON.stringify({
-          message: "Sync service successful",
-          data: {
-            msgsStored: result.msgsStored || 0,
-            addressesStored: result.addressesStored || 0,
-          },
-        }), {
-          status: 200,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        // Run sync_gmail_msgs function
+        result = await syncGmailMsgs.run(userId);
+
+        // Handle sync result
+        if (result.error) {
+          throw new Error(`Unexpected error occurred while syncing messages: \n${result.error}`);
+        } else if (!result.synced) {
+          throw new Error("Failed to sync messages");
+        } else {
+          logger.log(`Sync service completed for emailAccount id ${emailAccountId}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
+        }
       }
     } catch (error) {
       // Log error
@@ -59,6 +56,8 @@ export const sync_gmail_msgs = schedules.task({
 
       // Return error response
       return new Response(JSON.stringify({
+        
+        success: false,
         message: "Sync service failed",
         error: (error as Error).message || 'An unknown error occurred',
         data: {
@@ -72,5 +71,21 @@ export const sync_gmail_msgs = schedules.task({
         },
       });
     }
+
+    // Return successful response
+    return new Response(JSON.stringify({
+      success: true,
+      message: "Sync service successful",
+      data: {
+        msgsStored: result?.msgsStored || 0,
+        addressesStored: result?.addressesStored || 0,
+      },
+    }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
   },
 });

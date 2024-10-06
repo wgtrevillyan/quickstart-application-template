@@ -10,20 +10,17 @@ import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
 import { getLastStoredGMsgId, getLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 export default {
-  async run(userId) {
+  async run(emailAccountId) {
 
     console.log("Sync service started...");
     console.log("\n");
 
     //////////////////////////////////////
 
-    // check if first time running, if so, get all messages
-    //const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
-    
     var msgsStored, addressesStored = 0;
 
     try {
-      const gmail = await connectToGmailClient(userId);
+      const gmail = await connectToGmailClient(emailAccountId);
       const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
       const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
 
@@ -32,11 +29,11 @@ export default {
       // Retrieve the messages list
       if (lastStoredMsgId !== null && lastHistoryId !== null) {
         console.log("Retrieving recent Gmail messages...");
-        await get_recent_gmail_msgs.run({ messages: [], gHistoryId: lastHistoryId });
+        await get_recent_gmail_msgs.run({ emailAccountId: emailAccountId, messages: [], gHistoryId: lastHistoryId });
         messages = get_recent_gmail_msgs.messages;
       } else {
         console.log("First time running. Retrieving all Gmail messages from last 90 days...");
-        await retrieve_gmail_msgs.run({ messages: [] });
+        await retrieve_gmail_msgs.run({ emailAccountId: emailAccountId, messages: [] });
         messages = retrieve_gmail_msgs.messages;
         console.log("Messages retrieved: ", messages.length);
       }
@@ -73,7 +70,7 @@ export default {
 
           // Store the sender addresses
           const result = await store_sender_addresses.run({
-            userId: userId,
+            emailAccountId: emailAccountId,
             messages: store_gmail_msgs.stored_msgs,
           });
           addressesStored = result.addresses_stored;

@@ -6,7 +6,7 @@ import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "..
 
 
 export default {
-  async run({ messages, gHistoryId }) {
+  async run({ emailAccountId, messages, gHistoryId }) {
 
     // FUNCTION: Reformat initial messages list
     function reformatMessages(msgsObject) {
@@ -21,13 +21,10 @@ export default {
 
     //////////////////////////////////////////
 
-    //const userId = steps.trigger.event.query.user; // For running on pipedream
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
-
     console.log("Retrieving recent Gmail messages...");
 
     // Establish Gmail connection
-    const gmail = await connectToGmailClient(userId);
+    const gmail = await connectToGmailClient(emailAccountId);
     const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
 
     // Retrieve new messages

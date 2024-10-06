@@ -3,6 +3,7 @@
 // Import necessary modules
 import { google } from "googleapis";
 import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
+import storeGmailAccount from "./store_gmail_account.mjs"
 
 export default {
     async run({ user_id, code }) {
@@ -32,24 +33,44 @@ export default {
                     ],
                   });
                 */
-            
+                
+                // Decode code to get refresh token and access token
                 console.log("Decoding refresh token...");
                 const { tokens } = await oauth2Client.getToken(code);
-                //console.log("tokens: ", tokens);
-                //console.log("tokens.access_token: ", tokens.access_token);
-                //console.log("tokens.refresh_token: ", tokens.refresh_token);
 
                 if (!tokens.refresh_token) {
-                    throw new Error("No refresh token found in the response.");
+                    throw new Error(`No refresh token found in the http response, returning: ${tokens}`);
                 }
+                oauth2Client.setCredentials({ access_token: tokens.access_token, refresh_token: tokens.refresh_token });
 
-                return tokens.refresh_token;
+                return { refreshToken: tokens.refresh_token, gmailClient: oauth2Client };
             } catch (error) {
-                console.error("Error retrieving tokens:", error.message);
+                console.error("Error retrieving tokens: ", error.message);
                 return null;
             }
 
             
+        }
+
+        //FUNCTION: Retrieve Gmail account info
+        async function getGoogleAccountInfo(oauth2Client) {
+            
+            try {
+                const response = await oauth2Client.users.getProfile({
+                    userId: 'me'
+                });
+    
+                if (!gmailAccount.data) {
+                    throw new Error(`Failed to retrieve gmail account info with refresh token, returning ${gmailAccount}`);
+                }
+                const gmailAccount = response.data;
+                console.log("Google account info: ", gmailAccount);
+
+                return gmailAccount
+            } catch (e) {
+                console.error(e.message);
+                throw error;
+            }
         }
 
         // FUNCTION: Store refresh token in Supabase vault
@@ -125,8 +146,8 @@ export default {
                     // Check if the token already exists
                     if (error.code === '23505') {
                         console.log(`${uniqueName} already exists. Updating the token...`);
-    
                         console.log("\n");
+
                         try {
                             const tokenUpdated = await updateRefreshToken(secretValue, uniqueName, description); // Update the token in the vault
                             
@@ -147,7 +168,7 @@ export default {
                 } else if (data === null) {
                     throw new Error('Token not stored. Returned data for UUID is null.');
                 } else {
-                    console.log('Token stored successfully:', data);
+                    console.log('Token stored successfully.');
                     return true;
                 }
                 
@@ -157,38 +178,25 @@ export default {
             }
         }
 
-        // FUNCTION: Verify that refresh token was properly stored in supabase vault
-        async function verifyTokenStorage(uniqueName) {
-            
-            const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
-            
-            // Retrieve the token from the Supabase vault
-            console.log("Retrieving token from Supabase vault...");
-            try {
-                const { data, error } = await supabaseClient.rpc('get_secret', { secret_name: uniqueName }); // Retrieve the secret from the vault
-            
-                if (error) {
-                    throw new Error(error.message);
-                }
-        
-            } catch (err) {
-                console.error('Error when verifying successful storage of refresh token:', err);
-                return false;
-            }
-
-            // Check if the secret is not null
-            if (data.secret !== null) {
-                return true;
-            } else {
-                return false;    
-            }
-        }
-
         //////////////////////////////////////////////////////
 
         try {
-            var refreshToken = await decodeTokens(code); // Decode the tokens and retrieve the refresh token
-            const result = await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_USER_${user_id}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
+            // Decode the tokens and retrieve the refresh token
+            const decodeResults = await decodeTokens(code); 
+            const gmailClient = decodeResults.gmailClient;
+            const refreshToken = decodeResults.refreshToken;
+
+            // Get google account info
+            const gAccountInfo = getGoogleAccountInfo(gmailClient);
+            
+            // Store the Gmail account
+            const accountId = await storeGmailAccount({userId: userId, gAccountInfo: gAccountInfo });
+            if (!accountId || accountId === null ) {
+                throw new Error("Error storing user gmail account in emailAccounts table within Supabase, returning false.");
+            }
+
+            // store refresh token
+            const result = await storeRefreshToken(refreshToken, `GMAIL_REFRESH_TOKEN_${accountId}`, `Gmail Refresh Token for user ${user_id}`); // Store the refresh token in the Supabase vault
             //console.log("storeRefreshToken() result:", result);
             if (result) {
                 return { token_stored: true };

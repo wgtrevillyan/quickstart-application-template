@@ -9,7 +9,7 @@ export const sync_letter_issues = schedules.task({
   run: async (payload) => {
     //logger.log("\n"); // Log a new line
     //logger.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request
-
+    let result;
     try {
         if (!payload.externalId) {
             throw new Error("External ID (userId) is required.");
@@ -23,16 +23,50 @@ export const sync_letter_issues = schedules.task({
             const userId = payload.externalId; // The user ID
     
             // Run the sync_gmail_msgs function
-            await syncLetterIssues.run(userId); // pass the externalId in as the userId
+            result = await syncLetterIssues.run(userId); // pass the externalId in as the userId
+
+
+            if (result.error) {
+                throw new Error(`Unexpected error occurred while syncing messages: \n${result.error}`);
+            } else if (!result.synced) {
+                throw new Error("Failed to sync issues, returning false.");
+            } else {
         
-            logger.log("Sync service completed."); // Log the message
-        
-            return new Response("Sync service triggered.", { status: 200 }); // Return a response
+                logger.log(`Sync service completed. Issues synced: ${result.issuesSynced}.`);
+            
+                // Return successful response
+                return new Response(JSON.stringify({
+                    success: true,
+                    message: "Sync service successful",
+                    data: {
+                        issuesSynced: result.issuesSynced || 0,
+                    },
+                }), {
+                    status: 200,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+            }
         }
     } catch (error) {
         logger.log("An error occurred when attempting to start the synce service:"); // Log the message
         logger.error; // Log the error
-        return new Response("Error: " + error, { status: 500 }); // Return a response
+
+        // return error response
+        return new Response(JSON.stringify({
+            success: false,
+            message: "Sync service failed",
+            error: (error as Error).message || 'An unknown error occurred',
+            data: {
+              issuesSynced: result?.issuesSynced || 0,
+            },
+          }), {
+            status: 500,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
     }
   },
 });

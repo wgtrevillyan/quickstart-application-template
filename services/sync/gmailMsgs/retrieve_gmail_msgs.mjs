@@ -9,7 +9,7 @@ import { isGmailMsgStored } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
-  async run({ messages }) {
+  async run({ emailAccountId, messages }) {
 
     // FUNCTION: Retrieve messages list
     async function retrieveMsgsLst(gmailClient, gUserId) {
@@ -97,14 +97,10 @@ export default {
 
     /////////////////////////////////////////////////////////////
 
-
-    //const userId = steps.trigger.event.query.user; // For running on pipedream
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
-
     console.log("Retrieving Gmail messages...");
 
     // Establish Gmail connection
-    var gmail = await connectToGmailClient(userId);
+    var gmail = await connectToGmailClient(emailAccountId);
 
     // Retrieve messages list
     var messages_lst = await retrieveMsgsLst(gmail.client, gmail.gUserId);
