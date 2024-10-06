@@ -7,7 +7,7 @@ import { getEmailAccountIds } from "../../../lib/supabase_queries.mjs";
  * Stores sender addresses in the Supabase database.
  * 
  * @param {Object} params - Parameters for the function.
- * @param {string} params.userId - The ID of the user.
+ * @param {string} params.emailAccountId - The ID of the user's email account.
  * @param {Array} params.messages - An array of messages.
  * 
  * @returns {Object} An object with a status and the number of addresses stored.
@@ -21,9 +21,6 @@ export default {
             // Extract sender addresses from the messages.
             const senderAddresses = messages.map(message => message.senderEmail);
 
-            // Get email account IDs from the emailAccounts table.
-            const emailAccountIds = await getEmailAccountIds(userId);
-
             // Initialize a counter for stored addresses.
             let storedAddressesCount = 0;
 
@@ -31,7 +28,6 @@ export default {
             const { data: storedSenderAddresses } = await supabaseClient
                 .from('senderAddresses')
                 .select('senderAddress')
-                .eq('userId', userId)
                 .eq('emailAccountId', emailAccountId);
 
             // Filter out sender addresses that have already been stored.

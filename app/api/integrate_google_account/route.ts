@@ -1,4 +1,4 @@
-// api/store_google_refresh_token/route.ts
+// api/integrate_google_account/route.ts
 
 // Importing the default export from the .mjs file
 import integrateGoogleAccount from '../../../services/auth/integrate_google_account.mjs';

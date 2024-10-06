@@ -104,8 +104,8 @@ const markMsgAsSynced = async (emailAccountId, gmailMessageId) => {
   try {
     const { data, status, statusText, error } = await supabaseClient()
       .from('gmailMessages')
-      .eq('gMsgId', gmailMessageId)
-      .update('syncedToIssues', true);
+      .update({ syncedToIssues: true})
+      .eq('id', gmailMessageId);
 
     if (error) {
       throw new Error(error.message);
