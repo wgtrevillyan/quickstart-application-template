@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   console.log(request);
   return new Response(JSON.stringify(results), {
     headers: {
-      'Access-Control-Allow-Origin': 'https://newsnook.flutterflow.app',
+      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization'
     }
