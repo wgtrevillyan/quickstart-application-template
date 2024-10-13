@@ -12,8 +12,15 @@ const allowCors = (fn: (req: NextApiRequest, res: NextApiResponse) => Promise<vo
   console.log("Request: ", req);
 
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    res.status(200);
+    return new Response(JSON.stringify(res)), {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Credentials': 'true'
+      }
+    }
   }
 
   return await fn(req, res);
