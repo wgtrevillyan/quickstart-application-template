@@ -10,10 +10,14 @@ export const maxDuration = 300; // This function can run for a maximum of 60 sec
 
 export async function POST(request: Request): Promise<Response> { {
 
+    try {
+
     console.log("\n"); // Log a new line
     console.log(request.method, '  ', request.url, ' at time: ', new Date().toISOString()); // Log the request
-    
-    try {
+
+        if (request.method != 'POST') {
+            return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), { status: 405 });
+        }
 
         // Parse the request body to get userId and code
         const userId = request.headers.get("userId");
