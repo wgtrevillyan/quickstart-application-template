@@ -6,12 +6,10 @@ const allowCors = (fn: (req: NextApiRequest, res: NextApiResponse) => Promise<vo
   res: NextApiResponse
 ) => {
   //res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Use '*' for development; specify domains for production
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version sec-ch-ua sec-ch-ua-mobile sec-ch-ua-platform sec-fetch-dest sec-fetch-mode sec-fetch-site user-agent', 
-  );
+  res.setHeader('Access-Control-Allow-Origin', 'https://newsnook.flutterflow.app'); // Replace with your specific domain
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  console.log("Request: ", req);
 
   if (req.method === 'OPTIONS') {
     res.status(200).end();
@@ -24,12 +22,24 @@ const allowCors = (fn: (req: NextApiRequest, res: NextApiResponse) => Promise<vo
 // The main handler function for your API endpoint
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   // Your existing handler logic
+  console.log("handler");
   res.status(200).json({ message: 'Google account integrated successfully' });
 };
-
+/*
+export async function POST(req: NextApiRequest, res: NextApiResponse) {
+  await allowCors(handler)(req, res);
+};
+*/
 // Export the handler wrapped with the CORS middleware
 export async function POST(request: Request) {
   const results = await allowCors(handler);
-  console.log("Request: ", request);
-  return new Response(JSON.stringify(results));
+  console.log("main");
+  return new Response(JSON.stringify(results), {
+    headers: {
+      'Access-Control-Allow-Origin': 'https://newsnook.flutterflow.app',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    }
+  });
 }
+  
