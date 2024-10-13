@@ -33,7 +33,7 @@ export async function POST(req: NextApiRequest, res: NextApiResponse) {
 // Export the handler wrapped with the CORS middleware
 export async function POST(request: Request) {
   const results = await allowCors(handler);
-  console.log("main");
+  console.log(request);
   return new Response(JSON.stringify(results), {
     headers: {
       'Access-Control-Allow-Origin': 'https://newsnook.flutterflow.app',
