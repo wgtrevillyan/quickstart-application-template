@@ -1,8 +1,8 @@
 // sync_gmail_messages.mjs
 
-import get_recent_gmail_msgs from "./get_recent_gmail_msgs.mjs";
-import retrieve_gmail_msgs from "./retrieve_gmail_msgs.mjs";
-import retrieve_msg_details from "./retrieve_msg_details.mjs";
+import getRecentGmailMsgs from "./get_recent_gmail_msgs.mjs";
+import getGmailMsgs from "./get_gmail_msgs.mjs";
+import getMsgDetails from "./get_msg_details.mjs";
 import store_gmail_msgs from "./store_gmail_msgs.mjs";
 import store_sender_addresses from "./store_sender_addresses.mjs";
 
@@ -29,12 +29,12 @@ export default {
       // Retrieve the messages list
       if (lastStoredMsgId !== null && lastHistoryId !== null) {
         console.log("Retrieving recent Gmail messages...");
-        await get_recent_gmail_msgs.run({ emailAccountId: emailAccountId, messages: [], gHistoryId: lastHistoryId });
-        messages = get_recent_gmail_msgs.messages;
+        await getRecentGmailMsgs.run({ emailAccountId: emailAccountId, messages: [], gHistoryId: lastHistoryId });
+        messages = getRecentGmailMsgs.messages;
       } else {
         console.log("First time running. Retrieving all Gmail messages from last 90 days...");
-        await retrieve_gmail_msgs.run({ emailAccountId: emailAccountId, messages: [] });
-        messages = retrieve_gmail_msgs.messages;
+        await getGmailMsgs.run({ emailAccountId: emailAccountId, messages: [] });
+        messages = getGmailMsgs.messages;
         console.log("Messages retrieved: ", messages.length);
       }
 
@@ -43,23 +43,32 @@ export default {
         console.log("No new messages found.");
       } else {
         // Retrieve the messages with details
-        await retrieve_msg_details.run({
+        await getMsgDetails.run({
+          emailAccountId: emailAccountId,
           messages: messages,
           processed_messages: null,
           gUserId: null,
           gHistoryId: null,
         });
-        var messages_with_details = retrieve_msg_details.processed_messages;
+        var messages_with_details = getMsgDetails.processed_messages;
+        var newhistoryId = getMsgDetails.gHistoryId;
+        //var updatedHistoryId = false;
 
         if (!messages_with_details || messages_with_details.length === 0) {
+          /*
+          updatedHistoryId = updateLastGHistoryId(gmail.gUserId, newhistoryId);
+          if (updatedHistoryId.status === false) {
+            throw new Error("Error occurred while updating the history ID.");
+          }
+          */
           throw new Error("No messages with details found.");
         }
 
         // Store the messages
         await store_gmail_msgs.run({
           messages: messages_with_details,
-          gUserId: retrieve_msg_details.gUserId,
-          gHistoryId: retrieve_msg_details.gHistoryId,
+          emailAccountId: emailAccountId,
+          gHistoryId: newhistoryId,
           msgs_stored: 0,
         });
         msgsStored = store_gmail_msgs.msgs_stored;
@@ -67,6 +76,14 @@ export default {
         if (msgsStored.length === 0 || !msgsStored) {
           throw new Error("No messages stored.");
         } else {
+          
+          /*
+          // Update the last history ID
+          updatedHistoryId = updateLastGHistoryId(gmail.gUserId, newhistoryId);
+          if (updatedHistoryId.status === false) {
+            throw new Error("Error occurred while updating the history ID.");
+          }
+          */
 
           // Store the sender addresses
           const result = await store_sender_addresses.run({

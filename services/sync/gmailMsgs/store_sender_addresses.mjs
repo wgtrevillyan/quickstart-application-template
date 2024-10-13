@@ -15,6 +15,8 @@ import { getEmailAccountIds } from "../../../lib/supabase_queries.mjs";
 export default {
     async run({ emailAccountId, messages }) {
         try {
+            console.log("Storing sender addresses in Supabase...");
+
             // Establish a connection to the Supabase client.
             const supabaseClient = await connectToSupabaseClient();
 
@@ -22,33 +24,48 @@ export default {
             const senderAddresses = messages.map(message => message.senderEmail);
 
             // Initialize a counter for stored addresses.
-            let storedAddressesCount = 0;
+            var storedAddressesCount = 0;
 
             // Get stored sender addresses from the senderAddresses table.
             const { data: storedSenderAddresses } = await supabaseClient
                 .from('senderAddresses')
                 .select('senderAddress')
                 .eq('emailAccountId', emailAccountId);
+            console.log(`Retrieved ${storedSenderAddresses.length} stored sender addresses from the senderAddresses table.`);
 
             // Filter out sender addresses that have already been stored.
             const newSenderAddresses = senderAddresses.filter(senderAddress => {
                 return storedSenderAddresses.every(storedSenderAddress => storedSenderAddress.senderAddress !== senderAddress);
             });
+            console.log(`Found ${newSenderAddresses.length} new sender addresses to store.`);
+
+            // Remove duplicates from the new sender addresses.
+            const uniqueNewSenderAddresses = [...new Set(newSenderAddresses)];
+            console.log(`Found ${uniqueNewSenderAddresses.length} unique sender addresses to store.\n`);
 
             // Insert new sender addresses into the senderAddresses table.
             const errorMessages = [];
-            for (const newSenderAddress of newSenderAddresses) {
+            var i = 0;
+            
+            for (const newSenderAddress of uniqueNewSenderAddresses) {
                 try {
-                    const { data, status, statusText, error } = await supabaseClient.from('senderAddresses').insert({
-                        emailAccountId: emailAccountId,
-                        senderAddress: newSenderAddress,
-                        status: 'pending'
-                    });
+                    i++;
+                    console.log(`Inserting sender address ${i} of ${uniqueNewSenderAddresses.length} into the senderAddresses table...\r`);
+                    const { data, status, statusText, error } = await supabaseClient
+                        .from('senderAddresses')
+                        .insert({
+                            emailAccountId: emailAccountId,
+                            senderAddress: newSenderAddress,
+                            status: 'pending'
+                        })
+                        .select();
 
                     if (error) {
-                        throw new Error(error.message);
-                    } else if (status !== 200) {
+                        throw new Error(`Unexpected Error occured when inserting message ${i}: ${status} ${statusText} - ${error.message}`);
+                    } else if (status !== 201) {
                         throw new Error(`Error storing sender address: ${status} ${statusText}`);
+                    } else if (!data) {
+                        throw new Error('No data returned after storing sender address.');
                     } else {
                         storedAddressesCount++;
                     }

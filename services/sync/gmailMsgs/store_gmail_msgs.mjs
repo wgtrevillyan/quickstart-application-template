@@ -5,7 +5,7 @@ import { updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
-    async run({ messages, gUserId, gHistoryId, msgs_stored}) {
+    async run({ messages, emailAccountId, gHistoryId, msgs_stored}) {
 
         const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
 
@@ -18,15 +18,16 @@ export default {
         let error_msgs = [];
         let total_added = 0;
         for (let i = 0; i < messages.length; i++) {
-
-            process.stdout.write(`Inserting message ${i + 1} of ${messages.length} into the ${tableName} table...\r`);
+            if (i % 10 === 0) {console.log(`Inserting message ${i + 1} of ${messages.length} into the ${tableName} table...\r`);}
 
             // Store the message in Supabase
             try {
-                const { data, error } = await supabaseClient.from(tableName).insert(messages[i]);
+                const { data, error, status, statusText } = await supabaseClient.from(tableName).insert(messages[i]);
 
                 if (error) {
                     error_msgs.push(error);
+                } else if (status !== 201) {
+                    error_msgs.push(`Error: ${status} - ${statusText}`);
                 } else {
                     total_added++; // Increment only if there is no error
                     storedMsgs.push(messages[i]); // Store the message in the stored messages list
@@ -34,6 +35,11 @@ export default {
             } catch (error) {
                 error_msgs.push(error);
             }
+        }
+
+        // Store recent history ID
+        if (gHistoryId) {
+            await updateLastGHistoryId(emailAccountId, gHistoryId);
         }
 
         console.log(`Inserted ${total_added} out of ${messages.length} messages into the ${tableName} table.`);
@@ -46,13 +52,9 @@ export default {
             }
         }
 
-        // Store recent history ID
-        if (gHistoryId) {
-            await updateLastGHistoryId(gUserId, gHistoryId);
-        }
+
 
         // Export the processed messages
-        console.log(`Exporting results...`);
         this.stored_msgs = storedMsgs; // Export the stored messages
         this.msgs_stored = total_added; // Export the total added messages
 

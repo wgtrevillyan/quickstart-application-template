@@ -62,7 +62,8 @@ export default {
 
 
     if (formattedMsgs.length == 0) {
-      return "No new messages found.";
+      console.log("No new messages found.");
+      return false;
     } else {
       console.log(`Found ${formattedMsgs.length} new messages.`);
     }
@@ -77,7 +78,7 @@ export default {
     console.log(`Retrieved ${formattedMsgs.length} messages.`);
     console.log("\n");
 
-    return `Retrieved Gmail Messages: ${formattedMsgs.length}`;
+    return true;
 
   },
 };

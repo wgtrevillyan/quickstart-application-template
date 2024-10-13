@@ -29,16 +29,16 @@ export const sync_gmail_msgs = schedules.task({
       logger.log(`  External ID (userId): ${userId}`);
 
       // Get user's email account ids
-      const emailAccountIds = await getEmailAccountIds(userId);
-      if (!emailAccountIds) {
+      const emailAccounts = await getEmailAccountIds(userId);
+      if (!emailAccounts) {
           throw new Error('No email account ids retrieved.');
       }
 
       // loop through all email accounts for user
-      for (const emailAccountId in emailAccountIds) {
-
+      for (let i = 0; i < emailAccounts.length; i++) {
+        console.log(emailAccounts[i].id);
         // Run sync_gmail_msgs function
-        result = await syncGmailMsgs.run(emailAccountId);
+        result = await syncGmailMsgs.run(emailAccounts[i].id);
 
         // Handle sync result
         if (result.error) {
@@ -46,7 +46,7 @@ export const sync_gmail_msgs = schedules.task({
         } else if (!result.synced) {
           throw new Error("Failed to sync messages");
         } else {
-          logger.log(`Sync service completed for emailAccount id ${emailAccountId}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
+          logger.log(`Sync service completed for emailAccount ${emailAccounts[i]}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
         }
       }
     } catch (error) {
