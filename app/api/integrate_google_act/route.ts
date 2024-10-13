@@ -5,7 +5,7 @@ const allowCors = (fn: (req: NextApiRequest, res: NextApiResponse) => Promise<vo
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  //res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*'); // Use '*' for development; specify domains for production
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
