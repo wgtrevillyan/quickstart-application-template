@@ -11,7 +11,6 @@ export default {
 
             console.log('Storing Gmail account info...');
             console.log('User ID:', userId);
-            console.log('Gmail account info:', gAccountInfo);
             console.log('gAccountInfo.emailAddress:', gAccountInfo.emailAddress);
 
             // Check if Gmail account already exists
@@ -19,12 +18,13 @@ export default {
                 .from('emailAccounts')
                 .select('id')
                 .eq('userId', userId)
+                .eq('emailClient', 'gmail')
                 .eq('emailAddress', gAccountInfo.emailAddress);
 
             if (emailAccountsError) {
                 console.error('Error occured when checking if Gmail account already exists: ', emailAccountsError.message);
                 throw new Error(emailAccountsError.message);
-            } else if (emailAccounts.length > 0) {
+            } else if (emailAccounts && emailAccounts.length > 0) {
                 console.log('Gmail account already exists in Supabase... skipping insertion.');
                 return emailAccounts[0].id;
             }
@@ -37,9 +37,10 @@ export default {
             }
 
             // Store Gmail account info in Supabase
-            const { error } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('emailAccounts')
-                .insert(insertData);
+                .insert(insertData)
+                .select('id');
 
             if (error) {
                 console.error('Error occured when inserting account info into emailAccounts table: ', error.message);
