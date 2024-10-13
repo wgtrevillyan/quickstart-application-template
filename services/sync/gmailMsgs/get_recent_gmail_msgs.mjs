@@ -25,10 +25,10 @@ export default {
 
     // Establish Gmail connection
     const gmail = await connectToGmailClient(emailAccountId);
-    const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
+    const lastStoredMsgId = await getLastStoredGMsgId(emailAccountId);
 
     // Retrieve new messages
-    const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
+    const lastHistoryId = await getLastGHistoryId(emailAccountId);
     try {
         const response = await gmail.client.users.history.list({
             userId: 'me',
