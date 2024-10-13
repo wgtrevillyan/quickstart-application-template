@@ -30,5 +30,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 // Export the handler wrapped with the CORS middleware
 export async function POST(request: Request) {
   const results = await allowCors(handler);
+  console.log("Request: ", request);
   return new Response(JSON.stringify(results));
 }
