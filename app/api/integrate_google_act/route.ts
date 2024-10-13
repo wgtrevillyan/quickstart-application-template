@@ -29,4 +29,6 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
 };
 
 // Export the handler wrapped with the CORS middleware
-export default allowCors(handler);
+export async function main(req: NextApiRequest, res: NextApiResponse) {
+    await allowCors(handler)(req, res);
+}
