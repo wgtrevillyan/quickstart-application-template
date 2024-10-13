@@ -27,7 +27,7 @@ export const sync_letter_issues = schedules.task({
 
 
             if (result.error) {
-                throw new Error(`Unexpected error occurred while syncing messages: \n${result.error}`);
+                throw new Error(`Unexpected error occurred while syncing issues: \n${result.error}`);
             } else if (!result.synced) {
                 throw new Error("Failed to sync issues, returning false.");
             } else {
@@ -51,7 +51,7 @@ export const sync_letter_issues = schedules.task({
         }
     } catch (error) {
         logger.log("An error occurred when attempting to start the synce service:"); // Log the message
-        logger.error; // Log the error
+        logger.error((error as Error).message || 'An unknown error occurred'); // Log the error
 
         // return error response
         return new Response(JSON.stringify({
