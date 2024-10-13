@@ -2,14 +2,14 @@
 
 // Import necessary modules
 import { count } from "console";
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { connectToSupabaseClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
-import { isGmailMsgStored } from "../../lib/supabase_queries.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
+import { connectToSupabaseClient } from "../../../lib/establish_clients.mjs";
+import { getLastStoredGMsgId, updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
+import { isGmailMsgStored } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
-  async run({ messages }) {
+  async run({ emailAccountId, messages }) {
 
     // FUNCTION: Retrieve messages list
     async function retrieveMsgsLst(gmailClient, gUserId) {
@@ -18,7 +18,7 @@ export default {
 
       var messages = [];
       let pageToken = null;
-      const query = 'label:inbox newer_than:90d'; // 
+      const query = 'label:inbox newer_than:10d'; // 
       var response = null;
       var newMsgs = [];
       var i = 0;
@@ -76,52 +76,57 @@ export default {
     // FUNCTION: Filter messages list by non-stored gMsgIds
     async function filterMsgsListByMsgId(messages_lst, gUserId) {
 
-      const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
-      
-      console.log("Filtering messages list by non-stored gMsgIds...");
+      try {
+        const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
+        
+        console.log("Filtering messages list by non-stored gMsgIds...");
 
-      var filteredMsgsLst = [];
-      var total = 0;
-      for (let i = 0; i < messages_lst.length; i++) {
-        let gMsgId = messages_lst[i].id;
-        let stored = await isGmailMsgStored(supabaseClient, gUserId, gMsgId);
-        if (!stored) {
-          total++;
-          filteredMsgsLst.push(messages_lst[i]);
-          console.log(`${total} of ${messages_lst.length} messages added to queue.`, '\r');
+        var filteredMsgsLst = [];
+        var total = 0;
+        for (let i = 0; i < messages_lst.length; i++) {
+          if (i % 10 === 0) {console.log(`Checking if message ${i + 1} of ${messages_lst.length} is already stored...\r`);}
+          
+          let gMsgId = messages_lst[i].id;
+          let stored = await isGmailMsgStored(supabaseClient, gUserId, gMsgId);
+          if (!stored) {
+            total++;
+            filteredMsgsLst.push(messages_lst[i]);
+          }
         }
+        console.log(`${total} of ${messages_lst.length} messages added to queue.`);
+        return filteredMsgsLst;
+      } catch (error) {
+        console.error('Error in filterMsgsListByMsgId:', error);
+        throw error;
       }
-      return filteredMsgsLst;
     }
 
 
     /////////////////////////////////////////////////////////////
 
+    try {
+      console.log("Retrieving Gmail messages...");
 
-    //const userId = steps.trigger.event.query.user; // For running on pipedream
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
+      // Establish Gmail connection
+      var gmail = await connectToGmailClient(emailAccountId);
 
-    console.log("Retrieving Gmail messages...");
+      // Retrieve messages list
+      var messages_lst = await retrieveMsgsLst(gmail.client, gmail.gUserId);
+      console.log(`Retrieved metadata for ${messages_lst.length} messages.`);
+      //console.log("Messages: ", messages);
 
-    // Establish Gmail connection
-    var gmail = await connectToGmailClient(userId);
+      // Filter messages list by non-stored gMsgIds 
+      const filteredMsgsLst = await filterMsgsListByMsgId(messages_lst, gmail.gUserId);
+      console.log(`Retrieved ${filteredMsgsLst.length} messages.`);
+      console.log("\n");
 
-    // Retrieve messages list
-    var messages_lst = await retrieveMsgsLst(gmail.client, gmail.gUserId);
-    console.log(`Retrieved metadata for ${messages_lst.length} messages.`);
-    //console.log("Messages: ", messages);
-
-    // Filter messages list by non-stored gMsgIds 
-    const filteredMsgsLst = await filterMsgsListByMsgId(messages_lst, gmail.gUserId);
-
-    // Export messages
-    console.log(`Exporting results...`);
-
-    this.messages = filteredMsgsLst; // Export the messages list for use in subsequent steps
-
-    console.log(`Retrieved ${filteredMsgsLst.length} messages.`);
-    console.log("\n");
-
-    return `Retrieved Gmail Messages: ${filteredMsgsLst.length}`;
+      this.messages = filteredMsgsLst; // Export the messages list for use in subsequent steps
+      
+      return true;
+    } catch (error) {
+      console.error('Error in get_gmail_msgs.mjs: ', error);
+      throw error;
+    }
+    
   },
 };

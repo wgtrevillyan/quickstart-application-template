@@ -1,12 +1,12 @@
 // retrieve_msg_details.mjs
 
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
 
 export default {
-  async run({ messages, processed_messages, gUserId, gHistoryId }) {
+  async run({ emailAccountId, messages, processed_messages, gUserId, gHistoryId }) {
 
     // FUNCTION: Process messages
-    async function processMessages(gmailClient, messages, userId, gUserId) {
+    async function processMessages(gmailClient, messages, emailAccountId, gUserId) {
       // FUNCTION: Extract data from payload
       function extractDataFromPayload(msgPayload) {
         function getHeaderValue(headers, key) {
@@ -81,7 +81,7 @@ export default {
 
       // FUNCTION: Create dictionary of message details
       function createDictOfMsg(
-        userId,
+        emailAccountId,
         gMsgId,
         gMsgThreadId,
         gMsgUserId,
@@ -95,7 +95,7 @@ export default {
         payload
       ) {
         return {
-          userId,
+          emailAccountId,
           gMsgId,
           gMsgThreadId,
           gMsgUserId,
@@ -135,12 +135,7 @@ export default {
                     break;
                 }
                 */
-
-        process.stdout.write(
-          `Parsing message details for message ${i + 1} of ${
-            messages.length
-          }...\r`
-        );
+        if (i % 10 === 0) {console.log(`Parsing message details for message ${i + 1} of ${messages.length}...\r`);} 
 
         const message = messages[i];
 
@@ -203,7 +198,7 @@ export default {
         }
 
         const msgDict = createDictOfMsg(
-            userId, // userId
+            emailAccountId, // emailAccountId
             message.id, // gMsgId
             message.threadId, // gMsgThreadId
             gUserId, // gUserId for local
@@ -234,28 +229,21 @@ export default {
             console.error(`Error ${i+1}: `, error_msgs[i]);
         }
       }
-
-      console.log("\n");
-      console.log("Processed messages: ", msgs_lst.length);
       return { messages: msgs_lst, historyId: msgHistoryId };
     }
 
 
     /////////////////////////////////////////////////////////////
-
-    //const userId = steps.trigger.event.query.user; // For running on pipedream
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
     
     console.log(`Retrieving message details...`);
 
     // Establish Gmail connection
-    var gmail = await connectToGmailClient(userId);
+    var gmail = await connectToGmailClient(emailAccountId);
 
     // Process messages
-    var result = await processMessages(gmail.client, messages, userId, gmail.gUserId);
+    var result = await processMessages(gmail.client, messages, emailAccountId, gmail.gUserId);
 
     // Export the processed messages
-    console.log(`Exporting results...`);
     this.processed_messages = result.messages; // Export the processed messages
     this.gUserId = gmail.gUserId; // Export the Gmail user ID
     this.gHistoryId = result.historyId; // Export the history ID
@@ -265,6 +253,6 @@ export default {
     );
     console.log("\n");
 
-    return `Retrieved Message Details: ${result.messages.length}`;
+    return true;
   },
 };

@@ -1,12 +1,12 @@
 // get_recent_gmail_msgs.mjs:
 
 // Import necessary modules
-import { connectToGmailClient } from "../../lib/establish_clients.mjs";
-import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "../../lib/supabase_queries.mjs";
+import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
+import { getLastStoredGMsgId, getLastGHistoryId, updateLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 
 export default {
-  async run({ messages, gHistoryId }) {
+  async run({ emailAccountId, messages, gHistoryId }) {
 
     // FUNCTION: Reformat initial messages list
     function reformatMessages(msgsObject) {
@@ -21,13 +21,10 @@ export default {
 
     //////////////////////////////////////////
 
-    //const userId = steps.trigger.event.query.user; // For running on pipedream
-    const userId = "de14618c-da53-4cb4-b222-4ae3292c8345"; // For testing locally
-
     console.log("Retrieving recent Gmail messages...");
 
     // Establish Gmail connection
-    const gmail = await connectToGmailClient(userId);
+    const gmail = await connectToGmailClient(emailAccountId);
     const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
 
     // Retrieve new messages
@@ -65,7 +62,8 @@ export default {
 
 
     if (formattedMsgs.length == 0) {
-      return "No new messages found.";
+      console.log("No new messages found.");
+      return false;
     } else {
       console.log(`Found ${formattedMsgs.length} new messages.`);
     }
@@ -80,7 +78,7 @@ export default {
     console.log(`Retrieved ${formattedMsgs.length} messages.`);
     console.log("\n");
 
-    return `Retrieved Gmail Messages: ${formattedMsgs.length}`;
+    return true;
 
   },
 };
