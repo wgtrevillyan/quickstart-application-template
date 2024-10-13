@@ -158,7 +158,7 @@ export default {
         var msgResults = null;
         try {
             msgResults = await gmailClient.users.messages.get({
-                userId: gUserId,
+                userId: 'me',
                 id: message.id,
             });
         } catch (error) {
