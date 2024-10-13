@@ -11,6 +11,9 @@ import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
  */
 export const sync_gmail_msgs = schedules.task({
   id: "syng-gmail-msgs",
+  machine: {
+    preset: "small-2x",
+  },
   run: async (payload) => {
     let result;
     try {
