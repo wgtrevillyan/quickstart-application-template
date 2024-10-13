@@ -15,7 +15,7 @@ export async function POST(request: Request): Promise<Response> { {
     console.log("\n"); // Log a new line
     console.log(request.method, '  ', request.url, ' at time: ', new Date().toISOString()); // Log the request
 
-        if (request.method != 'POST') {
+        if (request.method !== 'POST') {
             return new Response(JSON.stringify({ success: false, error: 'Method not allowed' }), { status: 405 });
         }
 
