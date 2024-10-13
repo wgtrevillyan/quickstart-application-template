@@ -12,9 +12,9 @@ export default {
   async run({ emailAccountId, messages }) {
 
     // FUNCTION: Retrieve messages list
-    async function retrieveMsgsLst(gmailClient, gUserId) {
+    async function retrieveMsgsLst(gmailClient, emailAccountId) {
 
-      var lastStoredMsgId = await getLastStoredGMsgId(gUserId);
+      var lastStoredMsgId = await getLastStoredGMsgId(emailAccountId);
 
       var messages = [];
       let pageToken = null;
@@ -30,7 +30,7 @@ export default {
         try {
           console.log(`Call ${i}: Retrieving 500 gmail messages...`);
           response = await gmailClient.users.messages.list({
-            userId: gUserId,
+            userId: 'me',
             q: query,
             maxResults: 500,
             pageToken: pageToken,
@@ -74,7 +74,7 @@ export default {
     }
 
     // FUNCTION: Filter messages list by non-stored gMsgIds
-    async function filterMsgsListByMsgId(messages_lst, gUserId) {
+    async function filterMsgsListByMsgId(messages_lst, emailAccountId) {
 
       try {
         const supabaseClient = await connectToSupabaseClient(); // Create a new Supabase client
@@ -87,7 +87,7 @@ export default {
           if (i % 10 === 0) {console.log(`Checking if message ${i + 1} of ${messages_lst.length} is already stored...\r`);}
           
           let gMsgId = messages_lst[i].id;
-          let stored = await isGmailMsgStored(supabaseClient, gUserId, gMsgId);
+          let stored = await isGmailMsgStored(supabaseClient, emailAccountId, gMsgId);
           if (!stored) {
             total++;
             filteredMsgsLst.push(messages_lst[i]);
@@ -111,12 +111,12 @@ export default {
       var gmail = await connectToGmailClient(emailAccountId);
 
       // Retrieve messages list
-      var messages_lst = await retrieveMsgsLst(gmail.client, gmail.gUserId);
+      var messages_lst = await retrieveMsgsLst(gmail.client, emailAccountId);
       console.log(`Retrieved metadata for ${messages_lst.length} messages.`);
       //console.log("Messages: ", messages);
 
       // Filter messages list by non-stored gMsgIds 
-      const filteredMsgsLst = await filterMsgsListByMsgId(messages_lst, gmail.gUserId);
+      const filteredMsgsLst = await filterMsgsListByMsgId(messages_lst, emailAccountId);
       console.log(`Retrieved ${filteredMsgsLst.length} messages.`);
       console.log("\n");
 

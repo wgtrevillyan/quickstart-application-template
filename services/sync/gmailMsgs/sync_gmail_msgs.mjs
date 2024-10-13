@@ -6,6 +6,8 @@ import getMsgDetails from "./get_msg_details.mjs";
 import store_gmail_msgs from "./store_gmail_msgs.mjs";
 import store_sender_addresses from "./store_sender_addresses.mjs";
 
+import measureMemoryUsage from "../../../lib/measure_memory_usage.mjs";
+
 import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
 import { getLastStoredGMsgId, getLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
@@ -21,8 +23,8 @@ export default {
 
     try {
       const gmail = await connectToGmailClient(emailAccountId);
-      const lastStoredMsgId = await getLastStoredGMsgId(gmail.gUserId);
-      const lastHistoryId = await getLastGHistoryId(gmail.gUserId);
+      const lastStoredMsgId = await getLastStoredGMsgId(emailAccountId);
+      const lastHistoryId = await getLastGHistoryId(emailAccountId);
 
       var messages = null;
 
@@ -103,6 +105,8 @@ export default {
     }
 
     //////////////////////////////////////
+
+    await measureMemoryUsage.run();
 
     console.log("Sync service finished.");
     console.log("\n");
