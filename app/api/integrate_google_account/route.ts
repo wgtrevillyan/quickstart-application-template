@@ -29,7 +29,7 @@ export async function POST(request: Request): Promise<Response> { {
         if (result.error) {
             throw new Error(`Unexpected error storing refresh token: ${result.error}`);
         } else if (!result.token_stored) {
-            throw new Error("Failed to store refresh token, returning");
+            throw new Error("Failed to store refresh token, returning null");
         } else {
             return new Response(JSON.stringify({ success: true }), { status: 200 });
         }

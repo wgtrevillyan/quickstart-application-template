@@ -1,12 +1,10 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-console.log("Hello from Functions!")
-
 Deno.serve(async (req) => {
   // Set CORS headers
   const corsHeaders = {
-    "Access-Control-Allow-Origin": "*", // Adjust this to your specific domain if needed
+    "Access-Control-Allow-Origin": "https://newsnook.flutterflow.app", // Adjust this to your specific domain if needed
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
   };
@@ -24,29 +22,42 @@ Deno.serve(async (req) => {
 
       ////////// all proxy logic here //////////
 
-      // Call vercel API POST /api/integrate_google_act
-      const response = await fetch("https://quickstart-application-template.vercel.app/api/integrate_google_act", {
+      // Extract headers
+      const userId = req.headers.get('userId');
+      const code = req.headers.get('code');
+
+      if (!userId || !code) {
+        console.error("Missing required headers: userId or code");
+        throw new Error("Missing required headers: userId or code");
+      }
+
+      // Call vercel API POST to vercel app/api/integrate_google_act
+      const response = await fetch("https://quickstart-application-template.vercel.app/api/integrate_google_account", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "userId": userId,
+          "code": code,
         },
-        body: JSON.stringify({
-          name: "Functions",
-        }),
+        body: JSON.stringify({}),
       });
 
+      
+      // handle response data and potential errors
+      if (!response.ok) {
+        // If the response status is not OK, throw an error
+        const errorData = await response.json();
+        console.error(errorData.message || "API call failed");
+        throw new Error(errorData.message || "API call failed");
+      } 
 
-
-      const data = {
-        message: `Hello ${response.success}!`,
-      };
-
+      const responseData = await response.json();
 
 
       //////////////////////////////////////////
 
       return new Response(
-        JSON.stringify(data),
+        JSON.stringify(responseData),
         {
           headers: {
             ...corsHeaders,
@@ -56,9 +67,9 @@ Deno.serve(async (req) => {
       );
     } catch (error) {
       return new Response(
-        JSON.stringify({ error: "Invalid request" }),
+        JSON.stringify({ error: error.message || "Invalid request" }),
         {
-          status: 400,
+          status: error.message.includes("Missing required headers") ? 400 : 500,
           headers: {
             ...corsHeaders,
             "Content-Type": "application/json",
