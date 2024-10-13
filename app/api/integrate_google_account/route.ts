@@ -16,7 +16,7 @@ export async function POST(request: Request): Promise<Response> { {
     try {
 
         // Parse the request body to get userId and code
-        const userId = request.headers.get("userid");
+        const userId = request.headers.get("userId");
         const code = request.headers.get("code");
 
         if (!userId || !code) {
