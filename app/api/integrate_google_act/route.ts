@@ -24,11 +24,11 @@ const allowCors = (fn: (req: NextApiRequest, res: NextApiResponse) => Promise<vo
 // The main handler function for your API endpoint
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
   // Your existing handler logic
-  console.log('Request method:', req.method);
   res.status(200).json({ message: 'Google account integrated successfully' });
 };
 
 // Export the handler wrapped with the CORS middleware
-export async function main(req: NextApiRequest, res: NextApiResponse) {
-    await allowCors(handler)(req, res);
+export async function POST(request: Request) {
+  const results = await allowCors(handler);
+  return new Response(JSON.stringify(results));
 }
