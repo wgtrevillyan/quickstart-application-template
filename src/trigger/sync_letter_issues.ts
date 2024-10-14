@@ -5,7 +5,7 @@ import syncLetterIssues from '../../services/sync/letterIssues/sync_letter_issue
 
 
 export const sync_letter_issues = schedules.task({
-  id: "syng-letter-issues",
+  id: "sync-letter-issues",
   run: async (payload) => {
     //logger.log("\n"); // Log a new line
     //logger.log(request.method, ' ', request.url, ' at time: ', new Date().toISOString()); // Log the request

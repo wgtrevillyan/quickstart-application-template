@@ -10,7 +10,7 @@ import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
  * This task is responsible for syncing Gmail messages.
  */
 export const sync_gmail_msgs = schedules.task({
-  id: "syng-gmail-msgs",
+  id: "sync-gmail-msgs",
   machine: {
     preset: "small-2x",
   },
