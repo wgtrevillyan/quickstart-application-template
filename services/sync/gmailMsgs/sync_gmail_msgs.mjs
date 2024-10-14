@@ -12,7 +12,7 @@ import { connectToGmailClient } from "../../../lib/establish_clients.mjs";
 import { getLastStoredGMsgId, getLastGHistoryId } from "../../../lib/supabase_queries.mjs";
 
 export default {
-  async run(emailAccountId) {
+  async run(authId, emailAccountId) {
 
     console.log("Sync service started...");
     console.log("\n");
@@ -89,6 +89,7 @@ export default {
 
           // Store the sender addresses
           const result = await store_sender_addresses.run({
+            authId: authId,
             emailAccountId: emailAccountId,
             messages: store_gmail_msgs.stored_msgs,
           });

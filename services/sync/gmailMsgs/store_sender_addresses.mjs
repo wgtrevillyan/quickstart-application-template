@@ -13,7 +13,7 @@ import { getEmailAccountIds } from "../../../lib/supabase_queries.mjs";
  * @returns {Object} An object with a status and the number of addresses stored.
  */
 export default {
-    async run({ emailAccountId, messages }) {
+    async run({ authId, emailAccountId, messages }) {
         try {
             console.log("Storing sender addresses in Supabase...");
 
@@ -54,6 +54,7 @@ export default {
                     const { data, status, statusText, error } = await supabaseClient
                         .from('senderAddresses')
                         .insert({
+                            authId: authId,
                             emailAccountId: emailAccountId,
                             senderAddress: newSenderAddress,
                             status: 'pending'

@@ -3,6 +3,7 @@
 import { logger, schedules } from "@trigger.dev/sdk/v3";
 import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
 import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
+import { getAuthId } from "@/lib/supabase_queries.mjs";
 
 /**
  * Sync Gmail Messages Task
@@ -37,11 +38,16 @@ export const sync_gmail_msgs = schedules.task({
           throw new Error('No email account ids retrieved.');
       }
 
+      const authId = await getAuthId(userId);
+      if (!authId) {
+        throw new Error('No auth user id retrieved.');
+      }
+
       // loop through all email accounts for user
       for (let i = 0; i < emailAccounts.length; i++) {
         console.log(emailAccounts[i].id);
         // Run sync_gmail_msgs function
-        result = await syncGmailMsgs.run(emailAccounts[i].id);
+        result = await syncGmailMsgs.run(authId, emailAccounts[i].id);
 
         // Handle sync result
         if (result.error) {
