@@ -1,6 +1,6 @@
 // src/trigger/sync_gmail_msgs.ts
 
-import { logger, schedules } from "@trigger.dev/sdk/v3";
+import { logger, task } from "@trigger.dev/sdk/v3";
 import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
 import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
 import { getAuthId } from "@/lib/supabase_queries.mjs";
@@ -10,27 +10,24 @@ import { getAuthId } from "@/lib/supabase_queries.mjs";
  * 
  * This task is responsible for syncing Gmail messages.
  */
-export const sync_gmail_msgs = schedules.task({
+export const sync_gmail_msgs = task({
   id: "sync-gmail-msgs",
   machine: {
     preset: "small-2x",
   },
-  run: async (payload) => {
+  run: async (payload: { userId: string }) => {
     let result;
     try {
       // Validate payload
-      if (!payload.externalId) {
+      if (!payload.userId) {
         return new Response(JSON.stringify({ success: false, error: "External ID (userId) is required." }), { status: 400 });
       }
 
-      const userId = payload.externalId;
+      const userId = payload.userId;
 
       // Log sync service details
       logger.log("Starting sync service...");
-      logger.log(`  Schedule ID: ${payload.scheduleId}`);
-      logger.log(`  Schedule At: ${payload.timestamp}`);
-      logger.log(`  Last run occured at: ${payload.lastTimestamp}`);
-      logger.log(`  External ID (userId): ${userId}`);
+      logger.log(`User ID: ${userId}`);
 
       // Get user's email account ids
       const emailAccounts = await getEmailAccountIds(userId);
