@@ -1,6 +1,6 @@
 // src/trigger/sync_gmail_msgs.ts
 
-import { logger, task } from "@trigger.dev/sdk/v3";
+import { logger, task, tasks } from "@trigger.dev/sdk/v3";
 import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
 import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
 import { getAuthId } from "@/lib/supabase_queries.mjs";
@@ -52,7 +52,17 @@ export const sync_gmail_msgs = task({
         } else if (!result.synced) {
           throw new Error("Failed to sync messages");
         } else {
-          logger.log(`Sync service completed for emailAccount ${emailAccounts[i]}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
+          logger.log(`Sync service completed for emailAccount ${emailAccounts[i].id}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
+          const trigger = result.triggerSyncIssues;
+          if (trigger === true) {
+            logger.log('Triggering Sync of Letter Issues...');
+            const handle = await tasks.trigger("sync-letter-issues", {
+              userId: userId
+            });
+            if (!handle.id) {
+              logger.error('Error occured when triggering Sync of Letter Issues.');
+            }
+          }
         }
       }
     } catch (error) {
