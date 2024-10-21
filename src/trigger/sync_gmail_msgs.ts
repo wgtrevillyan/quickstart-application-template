@@ -15,7 +15,7 @@ export const sync_gmail_msgs = task({
   machine: {
     preset: "small-2x",
   },
-  run: async (payload: { userId: string }) => {
+  run: async (payload: { userId: string, triggerSyncLetterIssues: boolean }) => {
     let result;
     try {
       // Validate payload
@@ -53,8 +53,8 @@ export const sync_gmail_msgs = task({
           throw new Error("Failed to sync messages");
         } else {
           logger.log(`Sync service completed for emailAccount ${emailAccounts[i].id}. Messages stored: ${result.msgsStored}, Addresses stored: ${result.addressesStored}`);
-          const trigger = result.triggerSyncIssues;
-          if (trigger === true) {
+          
+          if (payload.triggerSyncLetterIssues === true) {
             logger.log('Triggering Sync of Letter Issues...');
             const handle = await tasks.trigger("sync-letter-issues", {
               userId: userId
@@ -63,6 +63,7 @@ export const sync_gmail_msgs = task({
               logger.error('Error occured when triggering Sync of Letter Issues.');
             }
           }
+          
         }
       }
     } catch (error) {

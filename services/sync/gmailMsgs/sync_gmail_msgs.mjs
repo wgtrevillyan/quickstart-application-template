@@ -98,8 +98,6 @@ export default {
             throw new Error("Error occurred while storing sender addresses.");  
           }
 
-          var triggerSyncLetterIssues = result.triggerSyncIssues;
-
         }
       }
     } catch (error) {
@@ -114,6 +112,6 @@ export default {
     console.log("Sync service finished.");
     console.log("\n");
 
-    return { synced: true, msgsStored: msgsStored, addressesStored: addressesStored, triggerSyncIssues: triggerSyncLetterIssues };
+    return { synced: true, msgsStored: msgsStored, addressesStored: addressesStored };
   },
 };

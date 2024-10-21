@@ -32,13 +32,6 @@ export default {
                 .select('senderAddress')
                 .eq('emailAccountId', emailAccountId);
 
-            var triggerSyncLetterIssues = false;
-
-            if (storedSenderAddresses && storedSenderAddresses.length > 0) {
-                console.log(`Retrieved ${storedSenderAddresses.length} stored sender addresses from the senderAddresses table.`);
-                triggerSyncLetterIssues = true;
-            } 
-
             // Filter out sender addresses that have already been stored.
             const newSenderAddresses = senderAddresses.filter(senderAddress => {
                 return storedSenderAddresses.every(storedSenderAddress => storedSenderAddress.senderAddress !== senderAddress);
@@ -96,6 +89,6 @@ export default {
         }
 
         // Return the result.
-        return { status: true, addressesStored: storedAddressesCount, triggerSyncIssues: triggerSyncLetterIssues };
+        return { status: true, addressesStored: storedAddressesCount };
     }
 }
