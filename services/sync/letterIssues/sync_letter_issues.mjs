@@ -80,7 +80,8 @@ const storeMessageDetails = async (supabaseClient, authId, emailAccountId, gmail
         bodySnippet: messageDetails.bodySnippet,
         bodyText: messageDetails.bodyText,
         bodyHtml: messageDetails.bodyHtml,
-        receivedAt: messageDetails.receivedAt
+        receivedAt: messageDetails.receivedAt,
+        createdAt: Date.now(),
       });
 
     if (error) {

@@ -85,6 +85,7 @@ export default {
         gMsgId,
         gMsgThreadId,
         gMsgUserId,
+        createdAt,
         receivedAt,
         senderName,
         senderEmail,
@@ -99,6 +100,7 @@ export default {
           gMsgId,
           gMsgThreadId,
           gMsgUserId,
+          createdAt,
           receivedAt,
           senderName,
           senderEmail,
@@ -196,13 +198,14 @@ export default {
                 msgBodyHtml =
                 null;
         }
-
+        
         const msgDict = createDictOfMsg(
             emailAccountId, // emailAccountId
             message.id, // gMsgId
             message.threadId, // gMsgThreadId
             gUserId, // gUserId for local
-            convertTimestamp(msgResults.data.internalDate), // receivedAt
+            Date.now(),
+            msgResults.data.internalDate, // receivedAt
             msgSenderName, // senderName
             msgSenderEmail, // senderEmail
             msgSubject, // subject
