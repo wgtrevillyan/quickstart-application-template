@@ -7,7 +7,7 @@ import storeGmailAccount from "./store_gmail_account.mjs"
 import { create } from "domain";
 
 export default {
-    async run({ user_id, code }) {
+    async run({ user_id, code, redirect_uri }) {
 
 
         //FUNCTION: Decode the access and refresh tokens
@@ -24,7 +24,7 @@ export default {
                 var oauth2Client = new google.auth.OAuth2(
                     clientId,
                     clientSecret,
-                    'https://newsnook.flutterflow.app/gmailOauth2callback'
+                    redirect_uri
                 );
                 /*
                 const authUrl = oauth2Client.generateAuthUrl({

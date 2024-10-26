@@ -22,13 +22,14 @@ export async function POST(request: Request): Promise<Response> { {
         // Parse the request body to get userId and code
         const userId = request.headers.get("userId");
         const code = request.headers.get("code");
+        const redirect_uri = request.headers.get("redirect_uri");
 
         if (!userId || !code) {
             return new Response(JSON.stringify({ success: false, error: 'Missing userId or code' }), { status: 400 });
         }
 
         // Run the storeRefreshToken function
-        const result = await integrateGoogleAccount.run({ user_id: userId, code: code });
+        const result = await integrateGoogleAccount.run({ user_id: userId, code: code, redirect_uri: redirect_uri });
 
         if (result.error) {
             throw new Error(`Unexpected error storing refresh token: ${result.error}`);
