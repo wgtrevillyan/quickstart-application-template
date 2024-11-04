@@ -65,11 +65,32 @@ export default {
         const headers = msgPayload.headers;
         //console.log('Headers:', headers);
         const senderNameAndEmail = getHeaderValue(headers, "From");
-        //console.log('Sender:', senderNameAndEmail);
-        const senderName = senderNameAndEmail.split("<")[0].trim();
-        //console.log('Sender Name:', senderName);
-        const senderEmail = senderNameAndEmail.split("<")[1].split(">")[0];
-        //console.log('Sender Email:', senderEmail);
+        console.log('Sender:', senderNameAndEmail);
+        
+        // populate senderName and senderEmail
+        var senderName = '';
+        var senderEmail = '';
+
+        // if sender is null, skip
+        if(!senderNameAndEmail){
+          console.log('Sender not found for gMsgId: ' + msgPayload.id + '. Skipping...');
+        } else {
+
+          // if senderNameAndEmail contains a name, caputure name
+          if(senderNameAndEmail.includes('<')){
+            senderName = senderNameAndEmail.split("<")[0].trim();
+            console.log('Sender Name:', senderName, '\n');
+
+            senderEmail = senderNameAndEmail.split("<")[1].split(">")[0];
+            console.log('Sender Email:', senderEmail);
+          } else {
+
+            // capture email address
+            senderEmail = senderNameAndEmail.trim();
+            console.log('Sender Email:', senderEmail);
+          }
+        }
+
         const subject = getHeaderValue(headers, "Subject");
         //console.log('Subject:', subject);
         const [bodyText, bodyHtml] = getMsgBody(msgPayload);

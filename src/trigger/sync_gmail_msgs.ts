@@ -42,7 +42,7 @@ export const sync_gmail_msgs = task({
 
       // loop through all email accounts for user
       for (let i = 0; i < emailAccounts.length; i++) {
-        console.log(emailAccounts[i].id);
+        console.log('Email Account ID:', emailAccounts[i].id);
         // Run sync_gmail_msgs function
         result = await syncGmailMsgs.run(authId, emailAccounts[i].id);
 
