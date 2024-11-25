@@ -73,7 +73,7 @@ export default {
 
         // if sender is null, skip
         if(!senderNameAndEmail){
-          console.log('Sender not found for gMsgId: ' + msgPayload.id + '. Skipping...');
+          console.log('Sender not found. Skipping...');
         } else {
 
           // if senderNameAndEmail contains a name, caputure name
