@@ -1,7 +1,7 @@
 // src/trigger/sync_letter_issues.ts
 
 import { logger, task } from "@trigger.dev/sdk/v3";
-import syncLetterIssues from '../../services/sync/letterIssues/sync_letter_issues.mjs';
+import syncLetterIssues from '../../src/backend/services/sync/letterIssues/sync_letter_issues.mjs';
 
 
 export const sync_letter_issues = task({
