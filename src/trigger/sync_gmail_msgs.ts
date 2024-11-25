@@ -1,9 +1,9 @@
 // src/trigger/sync_gmail_msgs.ts
 
 import { logger, task, tasks } from "@trigger.dev/sdk/v3";
-import syncGmailMsgs from '../../services/sync/gmailMsgs/sync_gmail_msgs.mjs';
-import { getEmailAccountIds } from "@/lib/supabase_queries.mjs";
-import { getAuthId } from "@/lib/supabase_queries.mjs";
+import syncGmailMsgs from '../../src/backend/services/sync/gmailMsgs/sync_gmail_msgs.mjs';
+import { getEmailAccountIds } from "@/src/backend/lib/supabase_queries.mjs";
+import { getAuthId } from "@/src/backend/lib/supabase_queries.mjs";
 
 /**
  * Sync Gmail Messages Task

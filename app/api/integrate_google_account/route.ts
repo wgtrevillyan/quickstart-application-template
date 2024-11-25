@@ -1,7 +1,7 @@
 // api/integrate_google_account/route.ts
 
 // Importing the default export from the .mjs file
-import integrateGoogleAccount from '../../../services/auth/integrate_google_account.mjs';
+import integrateGoogleAccount from '../../../src/backend/services/auth/integrate_google_account.mjs';
 
 // Exporting the dynamic and runtime variables
 export const dynamic = "force-dynamic"; // static by default, unless reading the request
